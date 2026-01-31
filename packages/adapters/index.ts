@@ -1,6 +1,12 @@
 export { createMemoryDb } from "./memory/db.js";
 export { createStubAuth } from "./memory/auth.js";
+export { createSupabaseDb } from "./supabase/db.js";
+export type { SupabaseDbConfig } from "./supabase/db.js";
+export { createSupabaseAuth } from "./supabase/auth.js";
+export type { SupabaseAuthConfig } from "./supabase/auth.js";
 export { createEmailStub } from "./providers/email_stub.js";
 export { createCalendarStub } from "./providers/calendar_stub.js";
 export { createMemoryAudit } from "./audit/memory_audit.js";
+export { createSupabaseAudit } from "./audit/supabase_audit.js";
+export type { SupabaseAuditConfig } from "./audit/supabase_audit.js";
 export { createClock } from "./clock.js";

@@ -52,6 +52,17 @@ export default function ThreadPage() {
     }
   }
 
+  async function cancel() {
+    setActionLoading(true);
+    try {
+      const res = await fetch(`/api/thread/${id}/cancel`, { method: "POST" });
+      const data = await res.json();
+      if (data.thread) setThread(data.thread);
+    } finally {
+      setActionLoading(false);
+    }
+  }
+
   if (loading) return <p style={{ padding: "2rem" }}>Loading…</p>;
   if (!thread) return <p style={{ padding: "2rem" }}>Thread not found.</p>;
 
@@ -59,6 +70,8 @@ export default function ThreadPage() {
     <main style={{ maxWidth: 560, margin: "0 auto", padding: "2rem 1rem" }}>
       <p style={{ marginBottom: "1rem" }}>
         <a href="/app" style={{ fontSize: "0.9rem" }}>← Back to app</a>
+        {" · "}
+        <a href="/app/settings" style={{ fontSize: "0.9rem" }}>Settings</a>
       </p>
       <h1 style={{ fontSize: "1.5rem", fontWeight: 600, marginBottom: "0.5rem" }}>
         Thread {thread.id.slice(0, 12)}…
@@ -105,20 +118,52 @@ export default function ThreadPage() {
           </button>
         )}
         {thread.status === "proposed" && (
+          <>
+            <button
+              onClick={approve}
+              disabled={actionLoading}
+              style={{
+                padding: "0.5rem 1rem",
+                background: "#16a34a",
+                border: "none",
+                borderRadius: 6,
+                color: "white",
+                fontWeight: 500,
+                cursor: actionLoading ? "not-allowed" : "pointer",
+              }}
+            >
+              {actionLoading ? "Approving…" : "Approve & execute"}
+            </button>
+            <button
+              onClick={cancel}
+              disabled={actionLoading}
+              style={{
+                padding: "0.5rem 1rem",
+                background: "transparent",
+                border: "1px solid var(--border)",
+                borderRadius: 6,
+                color: "var(--muted)",
+                cursor: actionLoading ? "not-allowed" : "pointer",
+              }}
+            >
+              Cancel thread
+            </button>
+          </>
+        )}
+        {["draft", "planning"].includes(thread.status) && (
           <button
-            onClick={approve}
+            onClick={cancel}
             disabled={actionLoading}
             style={{
               padding: "0.5rem 1rem",
-              background: "#16a34a",
-              border: "none",
+              background: "transparent",
+              border: "1px solid var(--border)",
               borderRadius: 6,
-              color: "white",
-              fontWeight: 500,
+              color: "var(--muted)",
               cursor: actionLoading ? "not-allowed" : "pointer",
             }}
           >
-            {actionLoading ? "Approving…" : "Approve & execute"}
+            Cancel thread
           </button>
         )}
       </div>

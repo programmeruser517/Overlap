@@ -17,26 +17,110 @@ Flow: **prompt → agents negotiate → preview → approve → execute** (send 
 
 ---
 
-## Architecture (initial)
+## Architecture
 
 ```
 overlap/
 ├── apps/
-│   └── web/                    # Next.js (UI + HTTP → core)
+│   ├── web/                         # Next.js web app (UI + thin HTTP adapter)
+│   │   ├── app/
+│   │   │   ├── layout.tsx
+│   │   │   ├── page.tsx
+│   │   │   ├── login/page.tsx
+│   │   │   ├── app/page.tsx
+│   │   │   ├── app/thread/[id]/page.tsx
+│   │   │   ├── app/settings/page.tsx
+│   │   │   └── api/                 # HTTP wrapper that calls packages/core
+│   │   │       ├── me/route.ts
+│   │   │       ├── thread/route.ts
+│   │   │       └── thread/[id]/
+│   │   │           ├── route.ts
+│   │   │           ├── run/route.ts
+│   │   │           ├── approve/route.ts
+│   │   │           └── cancel/route.ts
+│   │   ├── proxy.ts                 # allowlist gate + routing only (no business logic)
+│   │   ├── package.json
+│   │   └── tsconfig.json
+│   │
+│   └── desktop/                     # native desktop app (Tauri/Electron shell)
+│       ├── src/
+│       │   ├── main.tsx             # desktop UI entry
+│       │   ├── routes/              # same route structure as web UI
+│       │   │   ├── App.tsx
+│       │   │   ├── Thread.tsx
+│       │   │   └── Settings.tsx
+│       │   └── ui/                  # desktop-only components (tray, native dialogs)
+│       ├── src-tauri/               # (if using Tauri) native bindings + permissions
+│       ├── package.json
+│       └── tsconfig.json
+│
 ├── packages/
-│   ├── core/                   # Product logic (portable)
-│   │   ├── agents/             # negotiate, email, schedule
-│   │   ├── domain/             # Thread, Proposal, Action
-│   │   ├── usecases/           # createThread, runPlanning, approveAction
-│   │   └── ports/              # Auth, Db, Mail, Calendar, Audit
-│   └── adapters/               # Supabase, email/calendar stubs (Gmail/Google later)
-├── package.json                # workspace root
-└── README.md
+│   ├── core/                        # THE PRODUCT LOGIC (portable)
+│   │   ├── agents/
+│   │   │   ├── agent.ts
+│   │   │   ├── negotiate.ts
+│   │   │   ├── email.ts
+│   │   │   └── schedule.ts
+│   │   ├── domain/
+│   │   │   ├── models.ts            # Thread/Proposal/Action domain objects
+│   │   │   ├── policies.ts          # preview-before-execute rules
+│   │   │   └── errors.ts
+│   │   ├── usecases/
+│   │   │   ├── createThread.ts
+│   │   │   ├── runPlanning.ts
+│   │   │   ├── approveAction.ts
+│   │   │   └── cancelThread.ts
+│   │   ├── validators/
+│   │   │   ├── proposal.ts
+│   │   │   └── action.ts
+│   │   ├── ports/                   # interfaces (no Supabase/Next-specific code)
+│   │   │   ├── AuthPort.ts
+│   │   │   ├── DbPort.ts
+│   │   │   ├── MailPort.ts
+│   │   │   ├── CalendarPort.ts
+│   │   │   ├── AuditPort.ts
+│   │   │   └── ClockPort.ts
+│   │   ├── types.ts
+│   │   └── index.ts                 # exports for web/desktop shells
+│   │
+│   ├── adapters/                    # concrete implementations of ports
+│   │   ├── memory/                  # in-memory for dev (Db, Auth)
+│   │   ├── supabase/                # Db/Auth adapter for web TODAY, desktop LATER
+│   │   │   ├── db.ts                # implements DbPort
+│   │   │   ├── auth.ts              # implements AuthPort
+│   │   │   └── schema.sql
+│   │   ├── providers/               # actions (email/calendar) behind interfaces
+│   │   │   ├── email_stub.ts       # MVP stub: "log only"
+│   │   │   ├── calendar_stub.ts    # MVP stub: "log only"
+│   │   │   ├── gmail.ts             # later
+│   │   │   ├── google_calendar.ts   # later
+│   │   │   ├── outlook.ts           # later
+│   │   │   └── ms_calendar.ts       # later
+│   │   └── audit/
+│   │       ├── memory_audit.ts
+│   │       └── supabase_audit.ts    # implements AuditPort
+│   │
+│   └── ui/                          # shared UI components (optional)
+│       ├── components/
+│       │   ├── PromptBox.tsx
+│       │   ├── ParticipantsInput.tsx
+│       │   ├── ProposalPreview.tsx
+│       │   ├── ApproveBar.tsx
+│       │   ├── AuditLog.tsx
+│       │   └── ThreadTimeline.tsx
+│       └── index.ts
+│
+├── README.md                        # architecture + how to add desktop later
+├── package.json                     # monorepo workspace config
+├── tsconfig.json
+└── .env.local
 ```
 
-- **Core** is framework-agnostic: threads, proposals, and “preview before execute” live here.
-- **Adapters** implement ports (DB, auth, mail, calendar); we start with stubs, then plug in Gmail / Google Calendar / Outlook.
-- **Web app** is a thin shell: it calls core use cases and exposes API routes.
+- **Core** is framework-agnostic: threads, proposals, validators, and “preview before execute” live here.
+- **Adapters** implement ports: memory/Supabase for Db/Auth; stubs (and later Gmail, Google Calendar, Outlook, MS) for mail/calendar.
+- **Web app** is a thin shell: proxy (allowlist only), API routes call core use cases.
+- **Desktop** is a skeleton (Tauri/Electron to be added); same route structure as web.
+- **packages/ui** holds shared components (PromptBox, ProposalPreview, ApproveBar, etc.) for web and desktop.
 
 ---
 
