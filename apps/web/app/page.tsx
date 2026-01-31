@@ -15,18 +15,16 @@ export default function HomePage() {
           <div className="container topbarInner">
             <div className="brand">
               <div className="logoWrap" aria-hidden="true">
-  <Image
-    src="/overlap_blue.png"
-    alt="Overlap logo"
-    width={42}
-    height={42}
-    priority
-  />
-</div>
-
+                <Image
+                  src="/overlap_blue.png"
+                  alt="Overlap logo"
+                  width={88}
+                  height={88}
+                  priority
+                />
+              </div>
               <div className="brandText">
-                <div className="brandName"></div>
-                <div className="brandSub">AI-to-AI coordination for scheduling</div>
+                <span className="brandSub">AI-to-AI coordination for scheduling.</span>
               </div>
             </div>
 
@@ -37,8 +35,8 @@ export default function HomePage() {
               <a className="navLink" href="#flows">
                 Flows
               </a>
-              <a className="btn btnPrimary" href="#demo">
-                Request access <span className="arrow">→</span>
+              <a className="btn btnPrimary" href="/login">
+                Open app <span className="arrow">→</span>
               </a>
             </nav>
           </div>
@@ -50,22 +48,27 @@ export default function HomePage() {
             <div className="heroLeft">
               <div className="pill">
                 <span className="pillDot" aria-hidden="true" />
-                v0.1 • internal preview • approval-first
+                v0.1 • approval-first • no inbox ping-pong
               </div>
 
               <h1 className="h1">
-                Meetings that schedule themselves.
-                <span className="h1Muted"> Your agent negotiates time with their agents.</span>
+                Say what you want.
+                <span className="h1Muted"> See what Overlap plans. Approve it.</span>
               </h1>
 
               <p className="sub">
-                Overlap coordinates multi-person scheduling by letting AI agents compare availability and propose the best
-                common windows - with a strict approval step before anything is finalized.
+                Overlap is an AI-to-AI coordination app that lets you schedule meetings or draft emails without back-and-forth. Each user runs an agent that securely understands their availability and preferences; agents negotiate overlaps across calendars (1-to-1 or groups) and present a clear preview before taking action.
               </p>
 
+              <ul className="heroBullets">
+                <li>Schedule meetings — agents compare calendars and propose times; you pick one and approve.</li>
+                <li>Draft emails — your agent uses prompt + thread context; you review and send.</li>
+                <li>Works 1-to-1 or with groups of 3, 4, 5+; every action requires your approval.</li>
+              </ul>
+
               <div className="ctaRow">
-                <a className="btn btnPrimary btnLarge" href="#demo">
-                  See the flow <span className="arrow">→</span>
+                <a className="btn btnPrimary btnLarge" href="/login">
+                  Open app <span className="arrow">→</span>
                 </a>
                 <a className="btn btnGhost btnLarge" href="#how">
                   How it works
@@ -74,24 +77,24 @@ export default function HomePage() {
 
               <div className="stats">
                 <div className="stat">
-                  <div className="statNum">30s</div>
-                  <div className="statLabel">to get options</div>
+                  <div className="statNum">Say</div>
+                  <div className="statLabel">what you want (meeting or email)</div>
                 </div>
                 <div className="stat">
-                  <div className="statNum">2–4</div>
-                  <div className="statLabel">ranked proposals</div>
+                  <div className="statNum">See</div>
+                  <div className="statLabel">what Overlap plans to do</div>
                 </div>
                 <div className="stat">
-                  <div className="statNum">0</div>
-                  <div className="statLabel">back-and-forth emails</div>
+                  <div className="statNum">Approve</div>
+                  <div className="statLabel">before anything is sent or booked</div>
                 </div>
               </div>
 
-              <div className="trustRow" aria-label="Office-ready notes">
+              <div className="trustRow" aria-label="Trust and workflow">
                 <span className="tag">Approval-first</span>
-                <span className="tag">Audit trail via threads</span>
-                <span className="tag">Multi-party</span>
-                <span className="tag">Office-ready</span>
+                <span className="tag">Agents negotiate • you decide</span>
+                <span className="tag">1-to-1 or groups</span>
+                <span className="tag">No inbox ping-pong</span>
               </div>
             </div>
 
@@ -100,12 +103,12 @@ export default function HomePage() {
               <div className="panel">
                 <div className="panelTop">
                   <div>
-                    <div className="panelTitle">Scheduling thread</div>
-                    <div className="panelSub">Draft • not yet connected to calendar</div>
+                    <div className="panelTitle">Example thread (schedule)</div>
+                    <div className="panelSub">Your prompt → agent compares calendars → you see options and approve</div>
                   </div>
                   <div className="status">
                     <span className="statusDot" />
-                    Active
+                    Preview
                   </div>
                 </div>
 
@@ -116,59 +119,59 @@ export default function HomePage() {
                       <span className="msgWhen">2:14 PM</span>
                     </div>
                     <div className="msgText">
-                      Set up a 30-minute sync with Aditya + Peter next week. Prefer Tue–Thu afternoons.
+                      Schedule a 30-minute sync with the team next week. Prefer Tue–Thu afternoons.
                     </div>
                   </div>
 
                   <div className="msg msgAgent">
                     <div className="msgMeta">
-                      <span className="msgWho">Overlap Agent</span>
+                      <span className="msgWho">Overlap</span>
                       <span className="msgWhen">2:14 PM</span>
                     </div>
                     <div className="msgText">
-                      I compared availability and found the best overlaps. Pick one to finalize:
+                      Compared availability across participants. Here are the best overlaps — pick one to approve:
                     </div>
 
                     <div className="slots">
                       <div className="slot">
                         <div className="slotTop">
                           <div className="slotDay">Tue</div>
-                          <div className="slotBadge good">High</div>
+                          <div className="slotBadge good">Best fit</div>
                         </div>
-                        <div className="slotTime">2:30-3:00 PM</div>
-                        <div className="slotMeta">30 min • 3 attendees • East Lansing time</div>
+                        <div className="slotTime">2:30–3:00 PM</div>
+                        <div className="slotMeta">30 min • all free</div>
                       </div>
 
                       <div className="slot">
                         <div className="slotTop">
                           <div className="slotDay">Wed</div>
-                          <div className="slotBadge good">High</div>
+                          <div className="slotBadge good">Best fit</div>
                         </div>
-                        <div className="slotTime">4:00-4:30 PM</div>
-                        <div className="slotMeta">30 min • 3 attendees • East Lansing time</div>
+                        <div className="slotTime">4:00–4:30 PM</div>
+                        <div className="slotMeta">30 min • all free</div>
                       </div>
 
                       <div className="slot">
                         <div className="slotTop">
                           <div className="slotDay">Thu</div>
-                          <div className="slotBadge warn">Medium</div>
+                          <div className="slotBadge warn">Alternative</div>
                         </div>
                         <div className="slotTime">3:00–3:30 PM</div>
-                        <div className="slotMeta">30 min • 3 attendees • East Lansing time</div>
+                        <div className="slotMeta">30 min • all free</div>
                       </div>
                     </div>
 
                     <div className="panelActions">
                       <button className="btn btnPrimary btnSmall" type="button">
-                        Approve
+                        Approve & create event
                       </button>
                       <button className="btn btnGhost btnSmall" type="button">
-                        Ask for alternatives
+                        Ask for other times
                       </button>
                     </div>
 
                     <div className="note">
-                      v0.1: this is a UI preview. Calendar creation + email sending can be added later.
+                      Same flow for email: you say what you want → Overlap drafts → you review and approve before sending.
                     </div>
                   </div>
                 </div>
@@ -176,15 +179,15 @@ export default function HomePage() {
 
               <div className="sideCards">
                 <div className="miniCard">
-                  <div className="miniTitle">Security posture</div>
+                  <div className="miniTitle">Your data stays yours</div>
                   <div className="miniText">
-                    Approval-first design: no actions without explicit confirmation.
+                    Agents only share what’s needed for the thread (e.g. availability); you approve before anything is sent or booked.
                   </div>
                 </div>
                 <div className="miniCard">
-                  <div className="miniTitle">Office workflow</div>
+                  <div className="miniTitle">Schedule or email</div>
                   <div className="miniText">
-                    Threads keep constraints + decisions visible for teams.
+                    Two flows today: agents negotiate calendar overlap, or draft email from your prompt; both require your approval.
                   </div>
                 </div>
               </div>
@@ -199,7 +202,7 @@ export default function HomePage() {
               <div>
                 <h2 className="h2">How it works</h2>
                 <p className="muted">
-                  Simple model: a thread stores context, agents negotiate, you approve.
+                  Say what you want → agents negotiate (calendars or email context) → you see a clear preview → you approve. No back-and-forth.
                 </p>
               </div>
             </div>
@@ -207,23 +210,23 @@ export default function HomePage() {
             <div className="grid4">
               <div className="step">
                 <div className="stepNum">01</div>
-                <div className="stepTitle">Create a request</div>
-                <div className="stepText">Participants, duration, preferences, constraints.</div>
+                <div className="stepTitle">Say what you want</div>
+                <div className="stepText">Schedule a meeting (who, when, prefs) or draft an email (recipients, intent).</div>
               </div>
               <div className="step">
                 <div className="stepNum">02</div>
                 <div className="stepTitle">Agents coordinate</div>
-                <div className="stepText">Availability comparison + constraint resolution.</div>
+                <div className="stepText">Your agent and others’ agents compare availability or context; they find overlap.</div>
               </div>
               <div className="step">
                 <div className="stepNum">03</div>
-                <div className="stepTitle">Ranked proposals</div>
-                <div className="stepText">2–4 options, confidence tagged.</div>
+                <div className="stepTitle">See the plan</div>
+                <div className="stepText">Overlap shows you a clear preview (times or draft) before any action.</div>
               </div>
               <div className="step">
                 <div className="stepNum">04</div>
-                <div className="stepTitle">Approve & finalize</div>
-                <div className="stepText">You approve before anything is created/sent.</div>
+                <div className="stepTitle">Approve it</div>
+                <div className="stepText">You approve; only then do we create the event or send the email.</div>
               </div>
             </div>
           </div>
@@ -235,7 +238,7 @@ export default function HomePage() {
             <div className="sectionHead">
               <div>
                 <h2 className="h2">Two flows (v0.1)</h2>
-                <p className="muted">Keep it focused for office use: scheduling + email drafting.</p>
+                <p className="muted">Schedule meetings or draft emails — both with a clear preview and your approval before anything happens.</p>
               </div>
             </div>
 
@@ -244,15 +247,15 @@ export default function HomePage() {
                 <div className="cardTop">
                   <div>
                     <div className="cardTitle">Schedule</div>
-                    <div className="cardSub">Agents propose common time windows.</div>
+                    <div className="cardSub">Agents negotiate across calendars; you see options and approve.</div>
                   </div>
                   <div className="chip">Core</div>
                 </div>
                 <ul className="list">
-                  <li>Multi-person coordination</li>
-                  <li>Time-zone aware proposals</li>
-                  <li>Approval before booking</li>
-                  <li>Thread audit trail</li>
+                  <li>1-to-1 or groups (3, 4, 5+)</li>
+                  <li>Agents compare availability; no email ping-pong</li>
+                  <li>Clear preview of proposed times</li>
+                  <li>You approve before the event is created</li>
                 </ul>
               </div>
 
@@ -260,26 +263,26 @@ export default function HomePage() {
                 <div className="cardTop">
                   <div>
                     <div className="cardTitle">Email</div>
-                    <div className="cardSub">Draft professionally from prompt + thread context.</div>
+                    <div className="cardSub">Your agent drafts from your prompt (and thread context); you review and approve before send.</div>
                   </div>
                   <div className="chip">Support</div>
                 </div>
                 <ul className="list">
-                  <li>Two tone options (concise / formal)</li>
-                  <li>Auto-fill context from the thread</li>
-                  <li>Approval before sending</li>
-                  <li>Consistent office voice</li>
+                  <li>Say what you want to communicate</li>
+                  <li>Agent pulls related context when useful</li>
+                  <li>You see the draft before it’s sent</li>
+                  <li>No back-and-forth — approve and go</li>
                 </ul>
               </div>
             </div>
 
             <div className="ctaBar">
               <div>
-                <div className="ctaTitle">Want this integrated with real calendars?</div>
-                <div className="ctaText">This page stays static — integrations come later when you’re ready.</div>
+                <div className="ctaTitle">Try the app</div>
+                <div className="ctaText">Create a thread, run planning, and approve a proposal — calendar and email integrations can be wired later.</div>
               </div>
-              <a className="btn btnPrimary btnLarge" href="#demo">
-                View preview <span className="arrow">→</span>
+              <a className="btn btnPrimary btnLarge" href="/login">
+                Open app <span className="arrow">→</span>
               </a>
             </div>
           </div>
@@ -289,7 +292,7 @@ export default function HomePage() {
           <div className="container footerInner">
             <div>
               <div className="footerName">Overlap</div>
-              <div className="muted">AI-to-AI coordination for scheduling and email drafting.</div>
+              <div className="muted">Say what you want, see what Overlap plans, approve it — no inbox ping-pong, no manual scheduling.</div>
             </div>
             <div className="footerLinks">
               <a className="navLink" href="#how">
@@ -352,9 +355,18 @@ a{color:inherit;text-decoration:none}
   backdrop-filter:blur(12px);
   border-bottom:1px solid var(--border);
 }
-.topbarInner{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0}
+.topbarInner{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 0}
 
 .brand{display:flex;align-items:center;gap:12px}
+.logoWrap{
+  flex-shrink:0;
+  width:88px;height:88px;
+  display:block;
+  line-height:0;
+}
+.logoWrap img{width:100%;height:100%;object-fit:contain;display:block;vertical-align:middle}
+.brandSub{font-size:14px;color:var(--muted);font-weight:500}
+
 .mark{
   width:42px;height:42px;border-radius:14px;
   background:linear-gradient(135deg, rgba(37,99,235,.12), rgba(124,58,237,.12));
@@ -367,9 +379,6 @@ a{color:inherit;text-decoration:none}
   background:linear-gradient(180deg, var(--accent), var(--accent2));
   box-shadow:0 10px 26px rgba(37,99,235,.25);
 }
-.brandName{font-weight:750;letter-spacing:-.02em}
-.brandSub{font-size:12px;color:var(--muted);margin-top:3px}
-
 .nav{display:flex;align-items:center;gap:10px}
 .navLink{
   font-size:14px;color:var(--muted);
@@ -432,6 +441,16 @@ a{color:inherit;text-decoration:none}
   line-height:1.7;
   max-width:60ch;
 }
+.heroBullets{
+  margin:16px 0 0;
+  padding-left:20px;
+  color:var(--muted);
+  font-size:15px;
+  line-height:1.65;
+  max-width:60ch;
+}
+.heroBullets li{margin:8px 0}
+
 .ctaRow{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap}
 
 .stats{
