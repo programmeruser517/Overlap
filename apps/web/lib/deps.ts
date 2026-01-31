@@ -1,5 +1,6 @@
 /**
  * Wire core use cases with adapters. Single instance for the app (in-memory stubs).
+ * When Supabase is configured, getCurrentUserId uses the Supabase session.
  */
 
 import {
@@ -18,9 +19,10 @@ import {
   createMemoryAudit,
   createClock,
 } from "@overlap/adapters";
+import { getUserId as getSupabaseUserId } from "@/lib/supabase/server";
 
 const db = createMemoryDb();
-const auth = createStubAuth();
+const stubAuth = createStubAuth();
 const mail = createEmailStub();
 const calendar = createCalendarStub();
 const audit = createMemoryAudit();
@@ -29,7 +31,9 @@ const scheduleAgent = createScheduleAgent({});
 const emailAgent = createEmailAgent({});
 
 export async function getCurrentUserId(): Promise<string | null> {
-  return auth.getCurrentUserId();
+  const supabaseUserId = await getSupabaseUserId();
+  if (supabaseUserId) return supabaseUserId;
+  return stubAuth.getCurrentUserId();
 }
 
 export const threadApi = {
