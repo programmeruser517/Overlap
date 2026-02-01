@@ -13,6 +13,8 @@ export default function OnboardingPage() {
   const profileRef = useRef<HTMLDivElement>(null);
   const [formData, setFormData] = useState({
     name: "",
+    job: "",
+    aboutYou: "",
     hoursStart: "09:00",
     hoursEnd: "17:00",
     timezone: "America/New_York",
@@ -99,6 +101,8 @@ export default function OnboardingPage() {
   const handleReset = () => {
     setFormData((prev) => ({
       name: prev.name,
+      job: prev.job,
+      aboutYou: prev.aboutYou,
       hoursStart: "09:00",
       hoursEnd: "17:00",
       timezone: "America/New_York",
@@ -155,6 +159,20 @@ export default function OnboardingPage() {
       field: "name",
       type: "text",
       placeholder: "e.g. Alex Johnson"
+    },
+    {
+      label: "What's your job or role?",
+      hint: "Helps your agent tailor context",
+      field: "job",
+      type: "text",
+      placeholder: "e.g. Product Manager, Engineer"
+    },
+    {
+      label: "1–2 sentences about you",
+      hint: "Optional: role, focus, or how you like to work",
+      field: "aboutYou",
+      type: "textarea",
+      placeholder: "e.g. I lead GTM and prefer async updates. I'm in PST and usually free after 2pm."
     },
     {
       label: "What are your working hours?",
@@ -358,6 +376,15 @@ export default function OnboardingPage() {
                         onChange={(e) => setFormData({...formData, [currentQuestion.field]: e.target.value})}
                         autoFocus
                       />
+                    ) : currentQuestion.type === "textarea" ? (
+                      <textarea
+                        className="questionInput questionTextarea"
+                        placeholder={currentQuestion.placeholder}
+                        value={formData[currentQuestion.field as keyof typeof formData]}
+                        onChange={(e) => setFormData({...formData, [currentQuestion.field]: e.target.value})}
+                        rows={4}
+                        autoFocus
+                      />
                     ) : currentQuestion.type === "timerange" ? (
                       <div className="timeRange">
                         <div className="timeRangeItem">
@@ -428,6 +455,14 @@ export default function OnboardingPage() {
                     <div className="reviewItem">
                       <div className="reviewLabel">Name</div>
                       <div className="reviewValue">{formData.name || "Not set"}</div>
+                    </div>
+                    <div className="reviewItem">
+                      <div className="reviewLabel">Job / role</div>
+                      <div className="reviewValue">{formData.job || "Not set"}</div>
+                    </div>
+                    <div className="reviewItem">
+                      <div className="reviewLabel">About you</div>
+                      <div className="reviewValue">{formData.aboutYou ? formData.aboutYou : "Not set"}</div>
                     </div>
                     <div className="reviewItem">
                       <div className="reviewLabel">Working hours</div>
@@ -844,6 +879,11 @@ a{color:inherit;text-decoration:none}
 .questionInput::placeholder{
   color:var(--muted);
   opacity:.6;
+}
+.questionTextarea{
+  min-height:100px;
+  resize:vertical;
+  font-family:inherit;
 }
 
 .timeRange{

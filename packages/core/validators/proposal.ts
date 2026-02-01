@@ -1,5 +1,5 @@
-import type { Proposal, ScheduleProposal, EmailProposal } from "../domain/models.js";
-import { InvalidProposalError } from "../domain/errors.js";
+import type { Proposal, ScheduleProposal, EmailProposal } from "../domain/models";
+import { InvalidProposalError } from "../domain/errors";
 
 function isIsoDate(s: unknown): s is string {
   return typeof s === "string" && !Number.isNaN(Date.parse(s));

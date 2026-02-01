@@ -3,7 +3,7 @@
  * Agents negotiate with each other (schedule) or draft (email).
  */
 
-import type { Proposal, PromptKind, Participant } from "../domain/models.js";
+import type { Proposal, PromptKind, Participant } from "../domain/models";
 
 export interface AgentContext {
   ownerId: string;

@@ -11,6 +11,7 @@ export default function AppHome() {
   const [step, setStep] = useState(0);
   const [getToMain, setGetToMain] = useState<boolean | null>(null);
   const [saving, setSaving] = useState(false);
+  const [creatingThread, setCreatingThread] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
   const [formData, setFormData] = useState({
     name: "",
@@ -120,6 +121,25 @@ export default function AppHome() {
       time: "No preference",
       buffer: "No buffer"
     }));
+  };
+
+  const handleNewThread = async () => {
+    setCreatingThread(true);
+    try {
+      const res = await fetch("/api/thread", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind: "schedule", prompt: "", participants: [] }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (data?.thread?.id) {
+        router.push(`/app/thread/${data.thread.id}`);
+      } else {
+        setCreatingThread(false);
+      }
+    } catch {
+      setCreatingThread(false);
+    }
   };
 
   const timeSlots = Array.from({length: 48}, (_, i) => {
@@ -282,9 +302,14 @@ export default function AppHome() {
             <div className="centerStack">
               <h1 className="h1 small">You&apos;re all set.</h1>
               <p className="sub center">Create a thread to get started.</p>
-              <a className="btn btnPrimary btnLarge btnPulse" href="/app">
-                New thread
-              </a>
+              <button
+                type="button"
+                className="btn btnPrimary btnLarge btnPulse"
+                onClick={handleNewThread}
+                disabled={creatingThread}
+              >
+                {creatingThread ? "Creating…" : "New thread"}
+              </button>
             </div>
           </div>
         </section>

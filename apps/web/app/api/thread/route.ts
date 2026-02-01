@@ -9,15 +9,16 @@ export async function POST(request: Request) {
     }
     const body = await request.json();
     const { kind, prompt, participants } = body;
-    if (!kind || !prompt) {
+    if (!kind) {
       return NextResponse.json(
-        { error: "kind and prompt required" },
+        { error: "kind required" },
         { status: 400 }
       );
     }
+    const promptStr = typeof prompt === "string" ? prompt : "";
     const thread = await threadApi.create(
       kind,
-      prompt,
+      promptStr,
       Array.isArray(participants) ? participants : []
     );
     return NextResponse.json({ thread });
