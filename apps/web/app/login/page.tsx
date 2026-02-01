@@ -183,7 +183,7 @@ export default function LoginPage() {
                   <div style={{ marginTop: 8 }}>
   <details>
     <summary style={{ cursor: "pointer", color: "var(--muted)", fontSize: 13 }}>
-      Demo admin
+      Admin login
     </summary>
 
     <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
@@ -192,7 +192,7 @@ export default function LoginPage() {
         className="loginInput"
         value={adminPassword}
         onChange={(e) => setAdminPassword(e.target.value)}
-        placeholder="Demo admin password"
+        placeholder="Password"
       />
 
       <button

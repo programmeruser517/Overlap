@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 type OrgReq = {
@@ -79,6 +81,30 @@ export default function AdminPage() {
 
   return (
     <main style={{ minHeight: "100vh", background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)" }}>
+      {/* Topbar with Logo */}
+      <div style={{ background: "rgba(255,255,255,.85)", backdropFilter: "blur(16px)", borderBottom: "1px solid rgba(15,23,42,.12)", position: "sticky", top: 0, zIndex: 50, boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 20px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 0" }}>
+            <Link href="/" style={{ display: "flex", alignItems: "center", gap: 14, textDecoration: "none" }}>
+              <div style={{ width: 56, height: 56, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Image
+                  src="/overlap_blue.png"
+                  alt="Overlap logo"
+                  width={56}
+                  height={56}
+                  priority
+                />
+              </div>
+              <div>
+                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#0f172a", letterSpacing: "-0.5px" }}>Overlap Admin</h2>
+                <span style={{ fontSize: 12, color: "#94a3b8", fontWeight: 500 }}>Organization Management</span>
+              </div>
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 20px" }}>
         {/* Header */}
         <div style={{ marginBottom: 40 }}>
