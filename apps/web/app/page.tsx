@@ -1,11 +1,46 @@
 // apps/web/app/page.tsx
 import Link from "next/link";
+import Image from "next/image";
 
 export default function HomePage() {
   return (
     <>
       <main className="wrap">
-        {/* Hero (text-only, centered) */}
+        {/* Top bar */}
+        <header className="topbar">
+          <div className="container topbarInner">
+            <div className="brand">
+              <div className="logoWrap" aria-hidden="true">
+                <Image
+                  src="/overlap_blue.png"
+                  alt="Overlap logo"
+                  width={88}
+                  height={88}
+                  priority
+                />
+              </div>
+              <div className="brandText">
+                <span className="brandSub">
+                  AI-to-AI coordination for scheduling.
+                </span>
+              </div>
+            </div>
+
+            <nav className="nav">
+              <a className="navLink" href="#how">
+                How it works
+              </a>
+              <a className="navLink" href="#flows">
+                Flows
+              </a>
+              <a className="btn btnPrimary" href="/login">
+                Open app <span className="arrow">→</span>
+              </a>
+            </nav>
+          </div>
+        </header>
+
+        {/* Hero (centered) */}
         <section className="hero">
           {/* Background image (fades in) */}
           <div className="heroBg" aria-hidden="true">
@@ -371,7 +406,7 @@ export default function HomePage() {
           <div className="container footerInner">
             <div>
               <div className="footerName">
-                © 2026 Overlap. All rights reserved.
+                ©️ 2026 Overlap. All rights reserved.
               </div>
               <div className="muted">Shaping future AI-driven offices.</div>
             </div>
@@ -460,8 +495,32 @@ body{
 }
 a{color:inherit;text-decoration:none}
 
-.wrap{min-height:100vh;padding:0}
-.container{max-width:1100px;margin:0 auto;padding:0}
+.wrap{min-height:100vh}
+.container{max-width:1100px;margin:0 auto;padding:0 20px}
+
+/* Fix anchor jump under sticky header */
+section[id]{ scroll-margin-top: 120px; }
+
+.topbar{
+  position:sticky;top:0;z-index:50;
+  background:rgba(255,255,255,.75);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+}
+.topbarInner{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 0}
+
+.brand{display:flex;align-items:center;gap:12px}
+.logoWrap{flex-shrink:0;width:88px;height:88px;display:block;line-height:0}
+.logoWrap img{width:100%;height:100%;object-fit:contain;display:block;vertical-align:middle}
+.brandSub{font-size:14px;color:var(--muted);font-weight:500}
+
+.nav{display:flex;align-items:center;gap:10px}
+.navLink{
+  font-size:14px;color:var(--muted);
+  padding:10px 10px;border-radius:10px;
+  transition:background .15s ease,color .15s ease,transform .15s ease;
+}
+.navLink:hover{background:rgba(15,23,42,.05);color:var(--text);transform:translateY(-1px)}
 
 .btn{
   border:1px solid var(--border);
@@ -487,13 +546,37 @@ a{color:inherit;text-decoration:none}
 .btnSmall{padding:9px 12px;border-radius:12px;font-size:13px}
 .arrow{opacity:.9}
 
-/* HERO: centered */
-.hero{padding:0}
+/* HERO with full-bleed background image */
+.hero{
+  position:relative;
+  padding:56px 0 20px;
+  overflow:hidden;
+}
+.heroBg{
+  position:absolute;
+  inset:0;
+  z-index:0;
+  opacity:0;
+  animation: fadeIn 1.2s ease forwards;
+  animation-delay:.05s;
+}
+.heroOverlay{
+  position:absolute;
+  inset:0;
+  z-index:1;
+  background:
+    radial-gradient(900px 420px at 50% 40%, rgba(255,255,255,.82), rgba(255,255,255,.55) 55%, rgba(255,255,255,.25) 100%),
+    linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,.18));
+  pointer-events:none;
+}
+
 .heroSolo{
-  min-height: 100vh;
+  position:relative;
+  z-index:2;
+  min-height: calc(100vh - 120px);
   display:grid;
   place-items:center;
-  padding: 0;
+  padding: 26px 0;
 }
 .heroLeft{
   max-width: 900px;
@@ -746,6 +829,7 @@ a{color:inherit;text-decoration:none}
 @media (max-width: 560px){
   .titleMain{font-size:48px}
   .titleSub{font-size:30px}
+  .nav .navLink{display:none}
   .grid4{grid-template-columns:1fr}
   .ctaBar{flex-direction:column;align-items:stretch}
   .heroLeft{transform:translateY(-10px)}
