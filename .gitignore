@@ -5,6 +5,9 @@ node_modules/
 dist/
 .next/
 out/
+**/target/
+.turbo
+coverage/
 
 # Env
 .env
@@ -23,6 +26,7 @@ Thumbs.db
 # IDE
 .idea/
 .vscode/
+.cursor/
 *.swp
 *.swo
 

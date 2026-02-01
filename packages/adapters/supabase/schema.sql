@@ -29,3 +29,30 @@ CREATE TABLE IF NOT EXISTS audit_log (
 );
 
 CREATE INDEX IF NOT EXISTS idx_audit_thread ON audit_log(thread_id);
+
+-- Custom auth (magic link only; password users use Supabase Auth auth.users)
+CREATE TABLE IF NOT EXISTS app_users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email TEXT UNIQUE NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS magic_link_tokens (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  token TEXT UNIQUE NOT NULL,
+  email TEXT NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  used_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_magic_link_token ON magic_link_tokens(token);
+CREATE INDEX IF NOT EXISTS idx_magic_link_expires ON magic_link_tokens(expires_at);
+CREATE INDEX IF NOT EXISTS idx_app_users_email ON app_users(email);
+
+-- RLS: enable on all tables. With no policies, anon key has no access.
+-- Service role (used server-side) bypasses RLS. Add policies only if you expose tables to the client.
+ALTER TABLE threads ENABLE ROW LEVEL SECURITY;
+ALTER TABLE audit_log ENABLE ROW LEVEL SECURITY;
+ALTER TABLE app_users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE magic_link_tokens ENABLE ROW LEVEL SECURITY;

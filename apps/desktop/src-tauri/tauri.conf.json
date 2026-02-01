@@ -1,0 +1,30 @@
+{
+  "productName": "Overlap",
+  "version": "0.1.0",
+  "identifier": "app.overlap.desktop",
+  "build": {
+    "frontendDist": "../static",
+    "devUrl": "http://localhost:3000",
+    "beforeDevCommand": "cd ../web && npm run dev",
+    "beforeBuildCommand": ""
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "windows": [
+      {
+        "title": "Overlap",
+        "width": 1000,
+        "height": 700,
+        "minWidth": 600,
+        "minHeight": 400
+      }
+    ]
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "longDescription": "Overlap — AI-to-AI coordination. Schedule meetings or draft emails without back-and-forth.",
+    "shortDescription": "AI-to-AI coordination for scheduling and email",
+    "category": "Productivity"
+  }
+}

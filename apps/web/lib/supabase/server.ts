@@ -26,11 +26,26 @@ export async function createClient() {
   });
 }
 
-export async function getSession() {
+/** Custom magic-link table session (preferred). Returns { user: { id, email } } or null. */
+async function getCustomSession(): Promise<{ user: { id: string; email: string } } | null> {
+  try {
+    const { getSessionCookie } = await import("@/lib/auth/session");
+    const user = await getSessionCookie();
+    if (!user) return null;
+    return { user: { id: user.id, email: user.email } };
+  } catch {
+    return null;
+  }
+}
+
+/** Session from custom auth (magic-link table) or Supabase Auth. Use getSession() for app auth. */
+export async function getSession(): Promise<{ user: { id: string; email?: string } } | null> {
+  const custom = await getCustomSession();
+  if (custom) return custom;
   const supabase = await createClient();
   if (!supabase) return null;
   const { data: { session } } = await supabase.auth.getSession();
-  return session;
+  return session ?? null;
 }
 
 export async function getUserId(): Promise<string | null> {

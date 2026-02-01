@@ -25,11 +25,13 @@ overlap/
 │   ├── web/                         # Next.js web app (UI + thin HTTP adapter)
 │   │   ├── app/
 │   │   │   ├── layout.tsx
-│   │   │   ├── page.tsx
+│   │   │   ├── page.tsx             # landing
 │   │   │   ├── login/page.tsx
-│   │   │   ├── app/page.tsx
-│   │   │   ├── app/thread/[id]/page.tsx
-│   │   │   ├── app/settings/page.tsx
+│   │   │   ├── app/                 # in-app: nav (Home, Settings) + padded content
+│   │   │   │   ├── layout.tsx
+│   │   │   │   ├── page.tsx         # new thread
+│   │   │   │   ├── thread/[id]/page.tsx
+│   │   │   │   └── settings/page.tsx
 │   │   │   └── api/                 # HTTP wrapper that calls packages/core
 │   │   │       ├── me/route.ts
 │   │   │       ├── thread/route.ts
@@ -38,21 +40,15 @@ overlap/
 │   │   │           ├── run/route.ts
 │   │   │           ├── approve/route.ts
 │   │   │           └── cancel/route.ts
-│   │   ├── proxy.ts                 # allowlist gate + routing only (no business logic)
+│   │   ├── globals.css
 │   │   ├── package.json
 │   │   └── tsconfig.json
 │   │
-│   └── desktop/                     # native desktop app (Tauri/Electron shell)
-│       ├── src/
-│       │   ├── main.tsx             # desktop UI entry
-│       │   ├── routes/              # same route structure as web UI
-│       │   │   ├── App.tsx
-│       │   │   ├── Thread.tsx
-│       │   │   └── Settings.tsx
-│       │   └── ui/                  # desktop-only components (tray, native dialogs)
-│       ├── src-tauri/               # (if using Tauri) native bindings + permissions
+│   └── desktop/                     # lightweight Tauri 2 wrapper (loads web via URL)
+│       ├── static/index.html        # redirect to web app (no Next.js build)
+│       ├── src-tauri/
 │       ├── package.json
-│       └── tsconfig.json
+│       └── docs/desktop-build.md
 │
 ├── packages/
 │   ├── core/                        # THE PRODUCT LOGIC (portable)
@@ -118,8 +114,8 @@ overlap/
 
 - **Core** is framework-agnostic: threads, proposals, validators, and “preview before execute” live here.
 - **Adapters** implement ports: memory/Supabase for Db/Auth; stubs (and later Gmail, Google Calendar, Outlook, MS) for mail/calendar.
-- **Web app** is a thin shell: proxy (allowlist only), API routes call core use cases.
-- **Desktop** is a skeleton (Tauri/Electron to be added); same route structure as web.
+- **Web app** is a thin shell: landing at `/`, in-app at `/app` with nav (Home, Settings) and padded content; API routes call core use cases.
+- **Desktop** is a minimal Tauri 2 wrapper: static redirect loads the web app (no Next.js build). See `docs/desktop-build.md`.
 - **packages/ui** holds shared components (PromptBox, ProposalPreview, ApproveBar, etc.) for web and desktop.
 
 ---
