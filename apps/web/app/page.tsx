@@ -20,7 +20,9 @@ export default function HomePage() {
                 />
               </div>
               <div className="brandText">
-                <span className="brandSub">AI-to-AI coordination for scheduling.</span>
+                <span className="brandSub">
+                  AI-to-AI coordination for scheduling.
+                </span>
               </div>
             </div>
 
@@ -38,19 +40,38 @@ export default function HomePage() {
           </div>
         </header>
 
-        {/* Hero (text-only, centered) */}
+        {/* Hero (centered) */}
         <section className="hero">
+          {/* Background image (fades in) */}
+          <div className="heroBg" aria-hidden="true">
+            <Image
+              src="/overlap_blue_no_text.png"
+              alt=""
+              fill
+              priority
+              sizes="100vw"
+              style={{ objectFit: "cover" }}
+            />
+          </div>
+
+          {/* Overlay gradient to ensure text contrast */}
+          <div className="heroOverlay" aria-hidden="true" />
+
           <div className="container heroSolo">
             <div className="heroLeft">
               <h1 className="h1">
                 <span className="titleMain">Overlap</span>
                 <br />
-                <span className="titleSub">Your personal AI agents for meeting scheduling</span>
+                <span className="titleSub">
+                  Your personal AI agents for meeting scheduling
+                </span>
               </h1>
 
               <p className="sub subFade">
-                No manual coordination required. Say goodbye to communication barriers. Overlap brings AI agents into the
-                office to manage schedules for everyone. Shaping the future of AI-driven workplaces.
+                No manual coordination required. Say goodbye to communication
+                barriers. Overlap brings AI agents into the office to manage
+                schedules for everyone. Shaping the future of AI-driven
+                workplaces.
               </p>
 
               <div className="ctaRow">
@@ -72,20 +93,20 @@ export default function HomePage() {
               <div>
                 <h2 className="h2">Preview</h2>
                 <p className="muted">
-                  Example thread: your prompt → agent compares calendars → you see options and approve.
+                  Example thread: your prompt → agent compares calendars → you
+                  see options and approve.
                 </p>
               </div>
-              <a className="btn btnPrimary btnLarge" href="/login">
-                Open app <span className="arrow">→</span>
-              </a>
+
             </div>
 
-            <div className="panel">
+            <div className="panel animateOnScroll">
               <div className="panelTop">
                 <div>
                   <div className="panelTitle">Example thread (schedule)</div>
                   <div className="panelSub">
-                    Your prompt → agent compares calendars → you see options and approve
+                    Your prompt → agent compares calendars → you see options and
+                    approve
                   </div>
                 </div>
                 <div className="status">
@@ -101,7 +122,8 @@ export default function HomePage() {
                     <span className="msgWhen">2:14 PM</span>
                   </div>
                   <div className="msgText">
-                    Schedule a 30-minute sync with the team next week. Prefer Tue–Thu afternoons.
+                    Schedule a 30-minute sync with the team next week. Prefer
+                    Tue–Thu afternoons.
                   </div>
                 </div>
 
@@ -111,7 +133,8 @@ export default function HomePage() {
                     <span className="msgWhen">2:14 PM</span>
                   </div>
                   <div className="msgText">
-                    Compared availability across participants. Here are the best overlaps — pick one to approve:
+                    Compared availability across participants. Here are the best
+                    overlaps — pick one to approve:
                   </div>
 
                   <div className="slots">
@@ -153,25 +176,107 @@ export default function HomePage() {
                   </div>
 
                   <div className="note">
-                    Same flow for email: you say what you want → Overlap drafts → you review and approve before sending.
+                    Same flow for email: you say what you want → Overlap drafts →
+                    you review and approve before sending.
                   </div>
                 </div>
               </div>
             </div>
 
+            {/* RIGHT SIDE */}
             <div className="sideCards">
-              <div className="miniCard">
+              <div className="miniCard animateOnScroll">
                 <div className="miniTitle">Your data stays yours</div>
                 <div className="miniText">
-                  Agents only share what’s needed for the thread (e.g. availability); you approve before anything is sent
-                  or booked.
+                  Agents only share what’s needed for the thread (e.g.
+                  availability); you approve before anything is sent or booked.
+                </div>
+                <div className="miniBullets">
+                  <div className="miniBullet">
+                    <span className="dot" />
+                    You control what’s shared
+                  </div>
+                  <div className="miniBullet">
+                    <span className="dot" />
+                    Least-privilege coordination
+                  </div>
+                  <div className="miniBullet">
+                    <span className="dot" />
+                    Approval-first actions
+                  </div>
                 </div>
               </div>
-              <div className="miniCard">
+
+              <div className="miniCard animateOnScroll">
                 <div className="miniTitle">Schedule or email</div>
                 <div className="miniText">
-                  Two flows today: agents negotiate calendar overlap, or draft email from your prompt; both require your
-                  approval.
+                  Two flows today: agents negotiate calendar overlap, or draft
+                  email from your prompt; both require your approval.
+                </div>
+                <div className="miniBullets">
+                  <div className="miniBullet">
+                    <span className="dot" />
+                    Meetings: propose best overlaps
+                  </div>
+                  <div className="miniBullet">
+                    <span className="dot" />
+                    Email: draft from prompt + context
+                  </div>
+                  <div className="miniBullet">
+                    <span className="dot" />
+                    You review before sending/booking
+                  </div>
+                </div>
+              </div>
+
+              <div className="miniCard miniCardWide animateOnScroll">
+                <div className="miniTitle">Approval-first by design</div>
+                <div className="miniText">
+                  Overlap can suggest, draft, and coordinate — but it won’t take
+                  actions on your behalf without an explicit approval step.
+                </div>
+                <div className="miniBullets">
+                  <div className="miniBullet">
+                    <span className="dot" />
+                    Clear preview before commit
+                  </div>
+                  <div className="miniBullet">
+                    <span className="dot" />
+                    Ask for alternatives instantly
+                  </div>
+                  <div className="miniBullet">
+                    <span className="dot" />
+                    Works 1-to-1 or groups
+                  </div>
+                </div>
+              </div>
+
+              {/* NEW block below "Approval-first by design" */}
+              <div className="miniCard miniCardWide animateOnScroll">
+                <div className="miniTitle">Team-ready coordination</div>
+                <div className="miniText">
+                  Built for real offices: coordinate across time zones, roles,
+                  and preferences — while keeping the final decision with you.
+                </div>
+                <div className="miniBullets">
+                  <div className="miniBullet">
+                    <span className="dot" />
+                    Time-zone aware suggestions
+                  </div>
+                  <div className="miniBullet">
+                    <span className="dot" />
+                    Respect working hours & focus time
+                  </div>
+                  <div className="miniBullet">
+                    <span className="dot" />
+                    Fewer interruptions, faster alignment
+                  </div>
+                </div>
+
+                <div className="miniActions">
+                  <a className="btn btnGhost btnSmall" href="#flows">
+                    See flows
+                  </a>
                 </div>
               </div>
             </div>
@@ -185,34 +290,45 @@ export default function HomePage() {
               <div>
                 <h2 className="h2">How it works</h2>
                 <p className="muted">
-                  Say what you want → agents negotiate (calendars or email context) → you see a clear preview → you
-                  approve. No back-and-forth.
+                  Say what you want → agents negotiate (calendars or email
+                  context) → you see a clear preview → you approve. No
+                  back-and-forth.
                 </p>
               </div>
             </div>
 
             <div className="grid4">
-              <div className="step">
+              <div className="step animateOnScroll">
                 <div className="stepNum">01</div>
                 <div className="stepTitle">Say what you want</div>
-                <div className="stepText">Schedule a meeting (who, when, prefs) or draft an email (recipients, intent).</div>
+                <div className="stepText">
+                  Schedule a meeting (who, when, prefs) or draft an email
+                  (recipients, intent).
+                </div>
               </div>
-              <div className="step">
+              <div className="step animateOnScroll">
                 <div className="stepNum">02</div>
                 <div className="stepTitle">Agents coordinate</div>
                 <div className="stepText">
-                  Your agent and others’ agents compare availability or context; they find overlap.
+                  Your agent and others’ agents compare availability or context;
+                  they find overlap.
                 </div>
               </div>
-              <div className="step">
+              <div className="step animateOnScroll">
                 <div className="stepNum">03</div>
                 <div className="stepTitle">See the plan</div>
-                <div className="stepText">Overlap shows you a clear preview (times or draft) before any action.</div>
+                <div className="stepText">
+                  Overlap shows you a clear preview (times or draft) before any
+                  action.
+                </div>
               </div>
-              <div className="step">
+              <div className="step animateOnScroll">
                 <div className="stepNum">04</div>
                 <div className="stepTitle">Approve it</div>
-                <div className="stepText">You approve; only then do we create the event or send the email.</div>
+                <div className="stepText">
+                  You approve; only then do we create the event or send the
+                  email.
+                </div>
               </div>
             </div>
           </div>
@@ -225,18 +341,21 @@ export default function HomePage() {
               <div>
                 <h2 className="h2">Two flows (v0.1)</h2>
                 <p className="muted">
-                  Schedule meetings or draft emails — both with a clear preview and your approval before anything
-                  happens.
+                  Schedule meetings or draft emails — both with a clear preview
+                  and your approval before anything happens.
                 </p>
               </div>
             </div>
 
             <div className="grid2">
-              <div className="card">
+              <div className="card animateOnScroll">
                 <div className="cardTop">
                   <div>
                     <div className="cardTitle">Schedule</div>
-                    <div className="cardSub">Agents negotiate across calendars; you see options and approve.</div>
+                    <div className="cardSub">
+                      Agents negotiate across calendars; you see options and
+                      approve.
+                    </div>
                   </div>
                   <div className="chip">Core</div>
                 </div>
@@ -248,12 +367,13 @@ export default function HomePage() {
                 </ul>
               </div>
 
-              <div className="card">
+              <div className="card animateOnScroll">
                 <div className="cardTop">
                   <div>
                     <div className="cardTitle">Email</div>
                     <div className="cardSub">
-                      Your agent drafts from your prompt (and thread context); you review and approve before send.
+                      Your agent drafts from your prompt (and thread context);
+                      you review and approve before send.
                     </div>
                   </div>
                   <div className="chip">Support</div>
@@ -267,12 +387,12 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="ctaBar">
+            <div className="ctaBar animateOnScroll">
               <div>
                 <div className="ctaTitle">Try the app</div>
                 <div className="ctaText">
-                  Create a thread, run planning, and approve a proposal — calendar and email integrations can be wired
-                  later.
+                  Create a thread, run planning, and approve a proposal —
+                  calendar and email integrations can be wired later.
                 </div>
               </div>
               <a className="btn btnPrimary btnLarge" href="/login">
@@ -285,8 +405,10 @@ export default function HomePage() {
         <footer className="footer">
           <div className="container footerInner">
             <div>
-              <div className="footerName">Overlap</div>
-              <div className="muted">Shaping future AI-driven office.</div>
+              <div className="footerName">
+                © 2026 Overlap. All rights reserved.
+              </div>
+              <div className="muted">Shaping future AI-driven offices.</div>
             </div>
           </div>
         </footer>
@@ -294,6 +416,50 @@ export default function HomePage() {
 
       {/* Plain style tag (server-component safe) */}
       <style>{css}</style>
+
+      {/* IntersectionObserver for "scale up on scroll" blocks */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `
+(function(){
+  if (window.__overlapIO) return;
+  window.__overlapIO = true;
+
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce) {
+    document.querySelectorAll('.animateOnScroll').forEach(function(el){
+      el.classList.add('inView');
+      el.style.setProperty('--reveal', '1');
+    });
+    return;
+  }
+
+  if (!('IntersectionObserver' in window)) {
+    document.querySelectorAll('.animateOnScroll').forEach(function(el){
+      el.classList.add('inView');
+      el.style.setProperty('--reveal', '1');
+    });
+    return;
+  }
+
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if (entry.isIntersecting) {
+        entry.target.classList.add('inView');
+        entry.target.style.setProperty('--reveal', '1');
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.2, rootMargin: '0px 0px -10% 0px' });
+
+  document.querySelectorAll('.animateOnScroll').forEach(function(el){
+    el.style.setProperty('--reveal', '0');
+    io.observe(el);
+  });
+})();
+          `,
+        }}
+      />
     </>
   );
 }
@@ -332,6 +498,9 @@ a{color:inherit;text-decoration:none}
 .wrap{min-height:100vh}
 .container{max-width:1100px;margin:0 auto;padding:0 20px}
 
+/* Fix anchor jump under sticky header */
+section[id]{ scroll-margin-top: 120px; }
+
 .topbar{
   position:sticky;top:0;z-index:50;
   background:rgba(255,255,255,.75);
@@ -341,12 +510,7 @@ a{color:inherit;text-decoration:none}
 .topbarInner{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 0}
 
 .brand{display:flex;align-items:center;gap:12px}
-.logoWrap{
-  flex-shrink:0;
-  width:88px;height:88px;
-  display:block;
-  line-height:0;
-}
+.logoWrap{flex-shrink:0;width:88px;height:88px;display:block;line-height:0}
 .logoWrap img{width:100%;height:100%;object-fit:contain;display:block;vertical-align:middle}
 .brandSub{font-size:14px;color:var(--muted);font-weight:500}
 
@@ -372,7 +536,6 @@ a{color:inherit;text-decoration:none}
 }
 .btn:hover{transform:translateY(-1px);box-shadow:var(--shadow2)}
 .btn:focus{outline:none;box-shadow:var(--shadow2), var(--ring)}
-
 .btnPrimary{
   border-color:rgba(37,99,235,.25);
   background:linear-gradient(180deg, rgba(37,99,235,.10), rgba(37,99,235,.04));
@@ -383,18 +546,43 @@ a{color:inherit;text-decoration:none}
 .btnSmall{padding:9px 12px;border-radius:12px;font-size:13px}
 .arrow{opacity:.9}
 
-/* HERO: centered */
-.hero{padding:56px 0 20px}
+/* HERO with full-bleed background image */
+.hero{
+  position:relative;
+  padding:56px 0 20px;
+  overflow:hidden;
+}
+.heroBg{
+  position:absolute;
+  inset:0;
+  z-index:0;
+  opacity:0;
+  animation: fadeIn 1.2s ease forwards;
+  animation-delay:.05s;
+}
+.heroOverlay{
+  position:absolute;
+  inset:0;
+  z-index:1;
+  background:
+    radial-gradient(900px 420px at 50% 40%, rgba(255,255,255,.82), rgba(255,255,255,.55) 55%, rgba(255,255,255,.25) 100%),
+    linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,.18));
+  pointer-events:none;
+}
+
 .heroSolo{
+  position:relative;
+  z-index:2;
   min-height: calc(100vh - 120px);
   display:grid;
   place-items:center;
-  padding: 40px 0;
+  padding: 26px 0;
 }
 .heroLeft{
   max-width: 900px;
   margin: 0 auto;
   text-align: center;
+  transform: translateY(-22px);
 }
 .ctaRow{justify-content:center}
 
@@ -421,10 +609,10 @@ a{color:inherit;text-decoration:none}
   animation-delay: .15s;
 }
 
-/* Subtext fade-in (same style as titleSub) */
+/* Subtext fade-in */
 .sub{
   margin:16px auto 0;
-  color:var(--muted);
+  color:rgba(15,23,42,.60);
   font-size:16px;
   line-height:1.8;
   max-width:72ch;
@@ -435,12 +623,18 @@ a{color:inherit;text-decoration:none}
   animation-delay: .35s;
 }
 
-/* Respect reduced motion */
+/* Motion prefs */
 @media (prefers-reduced-motion: reduce){
+  .heroBg{opacity:1; animation:none}
   .titleSub{opacity:1; animation:none}
   .subFade{opacity:1; animation:none}
+  .animateOnScroll{transform:none !important; opacity:1 !important}
 }
 
+@keyframes fadeIn{
+  from{opacity:0}
+  to{opacity:1}
+}
 @keyframes fadeInUp{
   from{opacity:0; transform:translateY(6px)}
   to{opacity:1; transform:translateY(0)}
@@ -525,16 +719,29 @@ a{color:inherit;text-decoration:none}
 .panelActions{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
 .note{margin-top:10px;font-size:12px;color:var(--muted)}
 
-.sideCards{margin-top:0;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+/* Right side cards */
+.sideCards{
+  margin-top:0;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  align-content:start;
+}
+.miniCardWide{grid-column:1 / -1;}
+
 .miniCard{
   background:rgba(255,255,255,.78);
   border:1px solid var(--border);
   border-radius:16px;
-  padding:12px 12px;
+  padding:14px 14px;
   box-shadow:0 1px 0 rgba(15,23,42,.04);
 }
 .miniTitle{font-weight:850;letter-spacing:-.02em}
 .miniText{margin-top:6px;color:var(--muted);font-size:13px;line-height:1.55}
+.miniBullets{margin-top:10px;display:grid;gap:8px}
+.miniBullet{display:flex;align-items:center;gap:10px;color:rgba(15,23,42,.62);font-size:13px;line-height:1.4}
+.dot{width:8px;height:8px;border-radius:999px;background:rgba(37,99,235,.55);box-shadow:0 0 0 6px rgba(37,99,235,.10)}
+.miniActions{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
 
 /* How it works + flows grids */
 .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px}
@@ -588,13 +795,25 @@ a{color:inherit;text-decoration:none}
 .ctaTitle{font-weight:900;letter-spacing:-.02em}
 .ctaText{margin-top:6px;color:var(--muted);font-size:13px;line-height:1.55}
 
+/* Scroll reveal: small -> big */
+.animateOnScroll{
+  opacity:0;
+  transform: scale(.965);
+  transition: transform .55s ease, opacity .55s ease;
+  will-change: transform, opacity;
+}
+.animateOnScroll.inView{
+  opacity:1;
+  transform: scale(1);
+}
+
 .footer{
   padding:26px 0 44px;
   border-top:1px solid var(--border);
   background:rgba(255,255,255,.55);
 }
 .footerInner{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
-.footerName{font-weight:900;letter-spacing:-.02em}
+.footerName{font-weight:400;letter-spacing:-.02em}
 
 /* responsive */
 @media (max-width: 980px){
@@ -602,8 +821,10 @@ a{color:inherit;text-decoration:none}
   .grid4{grid-template-columns:1fr 1fr}
   .grid2{grid-template-columns:1fr}
   .sideCards{grid-template-columns:1fr}
+  .miniCardWide{grid-column:auto}
   .titleMain{font-size:62px}
   .titleSub{font-size:38px}
+  .heroLeft{transform:translateY(-14px)}
 }
 @media (max-width: 560px){
   .titleMain{font-size:48px}
@@ -611,5 +832,6 @@ a{color:inherit;text-decoration:none}
   .nav .navLink{display:none}
   .grid4{grid-template-columns:1fr}
   .ctaBar{flex-direction:column;align-items:stretch}
+  .heroLeft{transform:translateY(-10px)}
 }
 `;
