@@ -1,10 +1,6 @@
 // apps/web/app/page.tsx
 import Link from "next/link";
-
-
 import Image from "next/image";
-
-
 
 export default function HomePage() {
   return (
@@ -42,29 +38,20 @@ export default function HomePage() {
           </div>
         </header>
 
-        {/* Hero */}
+        {/* Hero (text-only, centered) */}
         <section className="hero">
-          <div className="container heroGrid">
+          <div className="container heroSolo">
             <div className="heroLeft">
-              <div className="pill">
-                <span className="pillDot" aria-hidden="true" />
-                v0.1 • approval-first • no inbox ping-pong
-              </div>
-
               <h1 className="h1">
-                Say what you want.
-                <span className="h1Muted"> See what Overlap plans. Approve it.</span>
+                <span className="titleMain">Overlap</span>
+                <br />
+                <span className="titleSub">Your personal AI agents for meeting scheduling</span>
               </h1>
 
-              <p className="sub">
-                Overlap is an AI-to-AI coordination app that lets you schedule meetings or draft emails without back-and-forth. Each user runs an agent that securely understands their availability and preferences; agents negotiate overlaps across calendars (1-to-1 or groups) and present a clear preview before taking action.
+              <p className="sub subFade">
+                No manual coordination required. Say goodbye to communication barriers. Overlap brings AI agents into the
+                office to manage schedules for everyone. Shaping the future of AI-driven workplaces.
               </p>
-
-              <ul className="heroBullets">
-                <li>Schedule meetings — agents compare calendars and propose times; you pick one and approve.</li>
-                <li>Draft emails — your agent uses prompt + thread context; you review and send.</li>
-                <li>Works 1-to-1 or with groups of 3, 4, 5+; every action requires your approval.</li>
-              </ul>
 
               <div className="ctaRow">
                 <a className="btn btnPrimary btnLarge" href="/login">
@@ -74,121 +61,117 @@ export default function HomePage() {
                   How it works
                 </a>
               </div>
+            </div>
+          </div>
+        </section>
 
-              <div className="stats">
-                <div className="stat">
-                  <div className="statNum">Say</div>
-                  <div className="statLabel">what you want (meeting or email)</div>
+        {/* Preview section */}
+        <section className="section" id="demo">
+          <div className="container demoGrid">
+            <div className="sectionHead demoHead">
+              <div>
+                <h2 className="h2">Preview</h2>
+                <p className="muted">
+                  Example thread: your prompt → agent compares calendars → you see options and approve.
+                </p>
+              </div>
+              <a className="btn btnPrimary btnLarge" href="/login">
+                Open app <span className="arrow">→</span>
+              </a>
+            </div>
+
+            <div className="panel">
+              <div className="panelTop">
+                <div>
+                  <div className="panelTitle">Example thread (schedule)</div>
+                  <div className="panelSub">
+                    Your prompt → agent compares calendars → you see options and approve
+                  </div>
                 </div>
-                <div className="stat">
-                  <div className="statNum">See</div>
-                  <div className="statLabel">what Overlap plans to do</div>
-                </div>
-                <div className="stat">
-                  <div className="statNum">Approve</div>
-                  <div className="statLabel">before anything is sent or booked</div>
+                <div className="status">
+                  <span className="statusDot" />
+                  Preview
                 </div>
               </div>
 
-              <div className="trustRow" aria-label="Trust and workflow">
-                <span className="tag">Approval-first</span>
-                <span className="tag">Agents negotiate • you decide</span>
-                <span className="tag">1-to-1 or groups</span>
-                <span className="tag">No inbox ping-pong</span>
+              <div className="panelBody">
+                <div className="msg msgUser">
+                  <div className="msgMeta">
+                    <span className="msgWho">You</span>
+                    <span className="msgWhen">2:14 PM</span>
+                  </div>
+                  <div className="msgText">
+                    Schedule a 30-minute sync with the team next week. Prefer Tue–Thu afternoons.
+                  </div>
+                </div>
+
+                <div className="msg msgAgent">
+                  <div className="msgMeta">
+                    <span className="msgWho">Overlap</span>
+                    <span className="msgWhen">2:14 PM</span>
+                  </div>
+                  <div className="msgText">
+                    Compared availability across participants. Here are the best overlaps — pick one to approve:
+                  </div>
+
+                  <div className="slots">
+                    <div className="slot">
+                      <div className="slotTop">
+                        <div className="slotDay">Tue</div>
+                        <div className="slotBadge good">Best fit</div>
+                      </div>
+                      <div className="slotTime">2:30–3:00 PM</div>
+                      <div className="slotMeta">30 min • all free</div>
+                    </div>
+
+                    <div className="slot">
+                      <div className="slotTop">
+                        <div className="slotDay">Wed</div>
+                        <div className="slotBadge good">Best fit</div>
+                      </div>
+                      <div className="slotTime">4:00–4:30 PM</div>
+                      <div className="slotMeta">30 min • all free</div>
+                    </div>
+
+                    <div className="slot">
+                      <div className="slotTop">
+                        <div className="slotDay">Thu</div>
+                        <div className="slotBadge warn">Alternative</div>
+                      </div>
+                      <div className="slotTime">3:00–3:30 PM</div>
+                      <div className="slotMeta">30 min • all free</div>
+                    </div>
+                  </div>
+
+                  <div className="panelActions">
+                    <button className="btn btnPrimary btnSmall" type="button">
+                      Approve & create event
+                    </button>
+                    <button className="btn btnGhost btnSmall" type="button">
+                      Ask for other times
+                    </button>
+                  </div>
+
+                  <div className="note">
+                    Same flow for email: you say what you want → Overlap drafts → you review and approve before sending.
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Preview panel */}
-            <div className="heroRight" id="demo">
-              <div className="panel">
-                <div className="panelTop">
-                  <div>
-                    <div className="panelTitle">Example thread (schedule)</div>
-                    <div className="panelSub">Your prompt → agent compares calendars → you see options and approve</div>
-                  </div>
-                  <div className="status">
-                    <span className="statusDot" />
-                    Preview
-                  </div>
-                </div>
-
-                <div className="panelBody">
-                  <div className="msg msgUser">
-                    <div className="msgMeta">
-                      <span className="msgWho">You</span>
-                      <span className="msgWhen">2:14 PM</span>
-                    </div>
-                    <div className="msgText">
-                      Schedule a 30-minute sync with the team next week. Prefer Tue–Thu afternoons.
-                    </div>
-                  </div>
-
-                  <div className="msg msgAgent">
-                    <div className="msgMeta">
-                      <span className="msgWho">Overlap</span>
-                      <span className="msgWhen">2:14 PM</span>
-                    </div>
-                    <div className="msgText">
-                      Compared availability across participants. Here are the best overlaps — pick one to approve:
-                    </div>
-
-                    <div className="slots">
-                      <div className="slot">
-                        <div className="slotTop">
-                          <div className="slotDay">Tue</div>
-                          <div className="slotBadge good">Best fit</div>
-                        </div>
-                        <div className="slotTime">2:30–3:00 PM</div>
-                        <div className="slotMeta">30 min • all free</div>
-                      </div>
-
-                      <div className="slot">
-                        <div className="slotTop">
-                          <div className="slotDay">Wed</div>
-                          <div className="slotBadge good">Best fit</div>
-                        </div>
-                        <div className="slotTime">4:00–4:30 PM</div>
-                        <div className="slotMeta">30 min • all free</div>
-                      </div>
-
-                      <div className="slot">
-                        <div className="slotTop">
-                          <div className="slotDay">Thu</div>
-                          <div className="slotBadge warn">Alternative</div>
-                        </div>
-                        <div className="slotTime">3:00–3:30 PM</div>
-                        <div className="slotMeta">30 min • all free</div>
-                      </div>
-                    </div>
-
-                    <div className="panelActions">
-                      <button className="btn btnPrimary btnSmall" type="button">
-                        Approve & create event
-                      </button>
-                      <button className="btn btnGhost btnSmall" type="button">
-                        Ask for other times
-                      </button>
-                    </div>
-
-                    <div className="note">
-                      Same flow for email: you say what you want → Overlap drafts → you review and approve before sending.
-                    </div>
-                  </div>
+            <div className="sideCards">
+              <div className="miniCard">
+                <div className="miniTitle">Your data stays yours</div>
+                <div className="miniText">
+                  Agents only share what’s needed for the thread (e.g. availability); you approve before anything is sent
+                  or booked.
                 </div>
               </div>
-
-              <div className="sideCards">
-                <div className="miniCard">
-                  <div className="miniTitle">Your data stays yours</div>
-                  <div className="miniText">
-                    Agents only share what’s needed for the thread (e.g. availability); you approve before anything is sent or booked.
-                  </div>
-                </div>
-                <div className="miniCard">
-                  <div className="miniTitle">Schedule or email</div>
-                  <div className="miniText">
-                    Two flows today: agents negotiate calendar overlap, or draft email from your prompt; both require your approval.
-                  </div>
+              <div className="miniCard">
+                <div className="miniTitle">Schedule or email</div>
+                <div className="miniText">
+                  Two flows today: agents negotiate calendar overlap, or draft email from your prompt; both require your
+                  approval.
                 </div>
               </div>
             </div>
@@ -202,7 +185,8 @@ export default function HomePage() {
               <div>
                 <h2 className="h2">How it works</h2>
                 <p className="muted">
-                  Say what you want → agents negotiate (calendars or email context) → you see a clear preview → you approve. No back-and-forth.
+                  Say what you want → agents negotiate (calendars or email context) → you see a clear preview → you
+                  approve. No back-and-forth.
                 </p>
               </div>
             </div>
@@ -216,7 +200,9 @@ export default function HomePage() {
               <div className="step">
                 <div className="stepNum">02</div>
                 <div className="stepTitle">Agents coordinate</div>
-                <div className="stepText">Your agent and others’ agents compare availability or context; they find overlap.</div>
+                <div className="stepText">
+                  Your agent and others’ agents compare availability or context; they find overlap.
+                </div>
               </div>
               <div className="step">
                 <div className="stepNum">03</div>
@@ -238,7 +224,10 @@ export default function HomePage() {
             <div className="sectionHead">
               <div>
                 <h2 className="h2">Two flows (v0.1)</h2>
-                <p className="muted">Schedule meetings or draft emails — both with a clear preview and your approval before anything happens.</p>
+                <p className="muted">
+                  Schedule meetings or draft emails — both with a clear preview and your approval before anything
+                  happens.
+                </p>
               </div>
             </div>
 
@@ -263,7 +252,9 @@ export default function HomePage() {
                 <div className="cardTop">
                   <div>
                     <div className="cardTitle">Email</div>
-                    <div className="cardSub">Your agent drafts from your prompt (and thread context); you review and approve before send.</div>
+                    <div className="cardSub">
+                      Your agent drafts from your prompt (and thread context); you review and approve before send.
+                    </div>
                   </div>
                   <div className="chip">Support</div>
                 </div>
@@ -279,7 +270,10 @@ export default function HomePage() {
             <div className="ctaBar">
               <div>
                 <div className="ctaTitle">Try the app</div>
-                <div className="ctaText">Create a thread, run planning, and approve a proposal — calendar and email integrations can be wired later.</div>
+                <div className="ctaText">
+                  Create a thread, run planning, and approve a proposal — calendar and email integrations can be wired
+                  later.
+                </div>
               </div>
               <a className="btn btnPrimary btnLarge" href="/login">
                 Open app <span className="arrow">→</span>
@@ -292,18 +286,7 @@ export default function HomePage() {
           <div className="container footerInner">
             <div>
               <div className="footerName">Overlap</div>
-              <div className="muted">Say what you want, see what Overlap plans, approve it — no inbox ping-pong, no manual scheduling.</div>
-            </div>
-            <div className="footerLinks">
-              <a className="navLink" href="#how">
-                How it works
-              </a>
-              <a className="navLink" href="#flows">
-                Flows
-              </a>
-              <a className="navLink" href="#demo">
-                Preview
-              </a>
+              <div className="muted">Shaping future AI-driven office.</div>
             </div>
           </div>
         </footer>
@@ -367,18 +350,6 @@ a{color:inherit;text-decoration:none}
 .logoWrap img{width:100%;height:100%;object-fit:contain;display:block;vertical-align:middle}
 .brandSub{font-size:14px;color:var(--muted);font-weight:500}
 
-.mark{
-  width:42px;height:42px;border-radius:14px;
-  background:linear-gradient(135deg, rgba(37,99,235,.12), rgba(124,58,237,.12));
-  border:1px solid var(--border);
-  box-shadow:var(--shadow2);
-  display:grid;place-items:center;
-}
-.markInner{
-  width:12px;height:12px;border-radius:999px;
-  background:linear-gradient(180deg, var(--accent), var(--accent2));
-  box-shadow:0 10px 26px rgba(37,99,235,.25);
-}
 .nav{display:flex;align-items:center;gap:10px}
 .navLink{
   font-size:14px;color:var(--muted);
@@ -407,75 +378,92 @@ a{color:inherit;text-decoration:none}
   background:linear-gradient(180deg, rgba(37,99,235,.10), rgba(37,99,235,.04));
 }
 .btnPrimary:hover{border-color:rgba(37,99,235,.35)}
-.btnGhost{
-  background:rgba(255,255,255,.65);
-}
+.btnGhost{background:rgba(255,255,255,.65)}
 .btnLarge{padding:12px 16px;border-radius:14px}
 .btnSmall{padding:9px 12px;border-radius:12px;font-size:13px}
 .arrow{opacity:.9}
 
+/* HERO: centered */
 .hero{padding:56px 0 20px}
-.heroGrid{display:grid;grid-template-columns:1.05fr .95fr;gap:22px;align-items:start}
-
-.pill{
-  display:inline-flex;align-items:center;gap:10px;
-  padding:8px 12px;border-radius:999px;
-  background:rgba(255,255,255,.70);
-  border:1px solid var(--border);
-  color:var(--muted);
-  font-size:13px;
+.heroSolo{
+  min-height: calc(100vh - 120px);
+  display:grid;
+  place-items:center;
+  padding: 40px 0;
 }
-.pillDot{width:8px;height:8px;border-radius:999px;background:var(--good);box-shadow:0 0 0 6px rgba(22,163,74,.10)}
+.heroLeft{
+  max-width: 900px;
+  margin: 0 auto;
+  text-align: center;
+}
+.ctaRow{justify-content:center}
 
+/* Title sizes + animations */
 .h1{
-  margin:14px 0 0;
-  font-size:46px;line-height:1.06;
-  letter-spacing:-.04em;
-  font-weight:800;
+  margin:0;
+  line-height:1.04;
+  letter-spacing:-.045em;
+  font-weight:900;
 }
-.h1Muted{color:var(--muted);font-weight:750}
+.titleMain{
+  font-size:76px;
+  line-height:0.95;
+}
+.titleSub{
+  margin-top:10px;
+  display:inline-block;
+  font-size:46px;
+  font-weight:900;
+  letter-spacing:-.04em;
+  color:rgba(15,23,42,.55);
+  opacity:0;
+  animation: fadeInUp .9s ease forwards;
+  animation-delay: .15s;
+}
+
+/* Subtext fade-in (same style as titleSub) */
 .sub{
-  margin:14px 0 0;
+  margin:16px auto 0;
   color:var(--muted);
   font-size:16px;
-  line-height:1.7;
-  max-width:60ch;
+  line-height:1.8;
+  max-width:72ch;
 }
-.heroBullets{
-  margin:16px 0 0;
-  padding-left:20px;
-  color:var(--muted);
-  font-size:15px;
-  line-height:1.65;
-  max-width:60ch;
+.subFade{
+  opacity:0;
+  animation: fadeInUp .9s ease forwards;
+  animation-delay: .35s;
 }
-.heroBullets li{margin:8px 0}
 
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce){
+  .titleSub{opacity:1; animation:none}
+  .subFade{opacity:1; animation:none}
+}
+
+@keyframes fadeInUp{
+  from{opacity:0; transform:translateY(6px)}
+  to{opacity:1; transform:translateY(0)}
+}
+
+/* CTA row */
 .ctaRow{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap}
 
-.stats{
-  margin-top:18px;
-  display:flex;gap:12px;flex-wrap:wrap;
-}
-.stat{
-  background:rgba(255,255,255,.78);
-  border:1px solid var(--border);
-  border-radius:16px;
-  padding:12px 14px;
-  min-width:160px;
-  box-shadow:0 1px 0 rgba(15,23,42,.04);
-}
-.statNum{font-weight:850;font-size:18px;letter-spacing:-.02em}
-.statLabel{color:var(--muted);font-size:13px;margin-top:4px}
+/* DEMO section */
+.section{padding:56px 0}
+.sectionHead{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:14px}
+.h2{margin:0;font-size:22px;font-weight:850;letter-spacing:-.02em}
+.muted{margin:8px 0 0;color:var(--muted);font-size:14px;line-height:1.65;max-width:72ch}
 
-.trustRow{margin-top:16px;display:flex;gap:10px;flex-wrap:wrap}
-.tag{
-  font-size:13px;color:var(--muted);
-  background:rgba(255,255,255,.70);
-  border:1px solid var(--border);
-  padding:8px 10px;border-radius:999px;
+.demoGrid{
+  display:grid;
+  grid-template-columns: 1.05fr .95fr;
+  gap: 22px;
+  align-items:start;
 }
+.demoHead{grid-column: 1 / -1;}
 
+/* Preview panel */
 .panel{
   background:rgba(255,255,255,.82);
   border:1px solid var(--border);
@@ -537,7 +525,7 @@ a{color:inherit;text-decoration:none}
 .panelActions{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
 .note{margin-top:10px;font-size:12px;color:var(--muted)}
 
-.sideCards{margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sideCards{margin-top:0;display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .miniCard{
   background:rgba(255,255,255,.78);
   border:1px solid var(--border);
@@ -548,11 +536,7 @@ a{color:inherit;text-decoration:none}
 .miniTitle{font-weight:850;letter-spacing:-.02em}
 .miniText{margin-top:6px;color:var(--muted);font-size:13px;line-height:1.55}
 
-.section{padding:56px 0}
-.sectionHead{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:14px}
-.h2{margin:0;font-size:22px;font-weight:850;letter-spacing:-.02em}
-.muted{margin:8px 0 0;color:var(--muted);font-size:14px;line-height:1.65;max-width:72ch}
-
+/* How it works + flows grids */
 .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px}
 .step{
   background:rgba(255,255,255,.78);
@@ -611,17 +595,19 @@ a{color:inherit;text-decoration:none}
 }
 .footerInner{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
 .footerName{font-weight:900;letter-spacing:-.02em}
-.footerLinks{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
 
 /* responsive */
 @media (max-width: 980px){
-  .heroGrid{grid-template-columns:1fr}
+  .demoGrid{grid-template-columns:1fr}
   .grid4{grid-template-columns:1fr 1fr}
   .grid2{grid-template-columns:1fr}
   .sideCards{grid-template-columns:1fr}
+  .titleMain{font-size:62px}
+  .titleSub{font-size:38px}
 }
 @media (max-width: 560px){
-  .h1{font-size:36px}
+  .titleMain{font-size:48px}
+  .titleSub{font-size:30px}
   .nav .navLink{display:none}
   .grid4{grid-template-columns:1fr}
   .ctaBar{flex-direction:column;align-items:stretch}
