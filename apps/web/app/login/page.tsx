@@ -12,6 +12,9 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  const [adminPassword, setAdminPassword] = useState("");
+  const [adminUnlocking, setAdminUnlocking] = useState(false);
+
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -30,6 +33,7 @@ export default function LoginPage() {
           setLoading(false);
           return;
         }
+        // Normal user login always goes to onboarding, never admin
         window.location.href = "/onboarding";
         return;
       }
@@ -176,6 +180,51 @@ export default function LoginPage() {
                       )}
                     </p>
                   </div>
+                  <div style={{ marginTop: 8 }}>
+  <details>
+    <summary style={{ cursor: "pointer", color: "var(--muted)", fontSize: 13 }}>
+      Demo admin
+    </summary>
+
+    <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
+      <input
+        type="password"
+        className="loginInput"
+        value={adminPassword}
+        onChange={(e) => setAdminPassword(e.target.value)}
+        placeholder="Demo admin password"
+      />
+
+      <button
+        type="button"
+        className="btn btnGhost btnSmall"
+        disabled={adminUnlocking}
+        onClick={async () => {
+          setAdminUnlocking(true);
+          setMessage(null);
+          try {
+            const res = await fetch("/api/admin/demo-login", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ password: adminPassword }),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+              setMessage({ type: "err", text: data.error ?? "Failed to unlock admin" });
+              return;
+            }
+            window.location.href = "/admin";
+          } finally {
+            setAdminUnlocking(false);
+          }
+        }}
+      >
+        {adminUnlocking ? "…" : "Unlock admin"}
+      </button>
+    </div>
+  </details>
+</div>
+
                 </form>
             </div>
           </div>
