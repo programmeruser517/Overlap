@@ -59,7 +59,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}${returnTo}?error=config`);
   }
 
-  const { error } = await supabase.from("linked_accounts").upsert(
+  // linked_accounts table not in generated Supabase types
+  const { error } = await (supabase as any).from("linked_accounts").upsert(
     {
       user_id: userId,
       provider: "google",

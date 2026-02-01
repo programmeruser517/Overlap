@@ -6,7 +6,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const token = searchParams.get("token");
   const next = searchParams.get("next") ?? "/onboarding";
-  const origin = request.nextUrl.origin;
+  const origin = new URL(request.url).origin;
 
   if (!token) {
     return NextResponse.redirect(`${origin}/login?error=missing_token`);
@@ -19,7 +19,7 @@ export async function GET(request: Request) {
 
   const now = new Date().toISOString();
 
-  const { data: row, error: fetchError } = await supabase
+  const { data: row, error: fetchError } = await (supabase as any)
     .from("magic_link_tokens")
     .select("id, email")
     .eq("token", token)
@@ -32,7 +32,7 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/login?error=invalid_or_expired`);
   }
 
-  const { error: updateError } = await supabase
+  const { error: updateError } = await (supabase as any)
     .from("magic_link_tokens")
     .update({ used_at: now })
     .eq("id", row.id);
@@ -43,7 +43,7 @@ export async function GET(request: Request) {
 
   const email = row.email as string;
 
-  const { data: userRow, error: userError } = await supabase
+  const { data: userRow, error: userError } = await (supabase as any)
     .from("app_users")
     .select("id")
     .eq("email", email)
@@ -54,7 +54,7 @@ export async function GET(request: Request) {
   if (userRow) {
     userId = userRow.id;
   } else {
-    const { data: inserted, error: insertError } = await supabase
+    const { data: inserted, error: insertError } = await (supabase as any)
       .from("app_users")
       .insert({ email })
       .select("id")

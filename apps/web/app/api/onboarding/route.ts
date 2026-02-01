@@ -12,7 +12,7 @@ export async function GET() {
     return NextResponse.json({ error: "Not configured" }, { status: 503 });
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("user_onboarding")
     .select("onboarding_data, get_to_main")
     .eq("user_id", userId)
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
 
   let get_to_main: boolean;
   if (set_get_to_main) {
-    const { data: org } = await supabase
+    const { data: org } = await (supabase as any)
       .from("organization_requests")
       .select("status")
       .eq("user_id", userId)
@@ -63,7 +63,7 @@ export async function POST(request: Request) {
     if (!get_to_main) {
       return NextResponse.json({ error: "Organization not accepted yet" }, { status: 403 });
     }
-    const { data: existingOnboarding } = await supabase
+    const { data: existingOnboarding } = await (supabase as any)
       .from("user_onboarding")
       .select("onboarding_data")
       .eq("user_id", userId)
@@ -75,7 +75,7 @@ export async function POST(request: Request) {
   } else if (complete) {
     get_to_main = false;
   } else {
-    const { data: existing } = await supabase
+    const { data: existing } = await (supabase as any)
       .from("user_onboarding")
       .select("get_to_main")
       .eq("user_id", userId)
@@ -84,7 +84,7 @@ export async function POST(request: Request) {
     get_to_main = existing?.get_to_main ?? false;
   }
 
-  const { error: upsertError } = await supabase.from("user_onboarding").upsert(
+  const { error: upsertError } = await (supabase as any).from("user_onboarding").upsert(
     {
       user_id: userId,
       onboarding_data,

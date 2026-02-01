@@ -1,4 +1,4 @@
-import type { Thread } from "../domain/models";
+import type { Thread } from "../domain/models.js";
 
 export interface DbPort {
   createThread(thread: Omit<Thread, "id"> & { createdAt: string; updatedAt: string }): Promise<Thread>;

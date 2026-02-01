@@ -12,11 +12,11 @@ export async function GET() {
     if (!supabase) {
       return NextResponse.json({ google: false, microsoft: false }, { status: 200 });
     }
-    const { data: rows } = await supabase
+    const { data: rows } = await (supabase as any)
       .from("linked_accounts")
       .select("provider")
       .eq("user_id", userId);
-    const providers = new Set((rows ?? []).map((r) => r.provider as string));
+    const providers = new Set((rows ?? []).map((r: { provider: string }) => r.provider));
     return NextResponse.json({
       google: providers.has("google"),
       microsoft: providers.has("microsoft"),

@@ -17,7 +17,7 @@ export default async function OnboardingLayout({
     const userId = await getUserId();
     const supabase = getSupabaseAdmin();
     if (userId && supabase) {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from("user_onboarding")
         .select("get_to_main")
         .eq("user_id", userId)

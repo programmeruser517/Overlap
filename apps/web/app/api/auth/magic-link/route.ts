@@ -50,7 +50,7 @@ export async function POST(request: Request) {
   const token = randomUUID();
   const expiresAt = new Date(Date.now() + TOKEN_TTL_MINUTES * 60 * 1000).toISOString();
 
-  const { error: insertError } = await supabase.from("magic_link_tokens").insert({
+  const { error: insertError } = await (supabase as any).from("magic_link_tokens").insert({
     token,
     email,
     expires_at: expiresAt,
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: insertError.message }, { status: 500 });
   }
 
-  const origin = request.headers.get("origin") || request.nextUrl.origin;
+  const origin = request.headers.get("origin") || new URL(request.url).origin;
   const magicLink = `${origin}/auth/callback?token=${encodeURIComponent(token)}`;
 
   await sendMagicLinkEmail(email, magicLink);

@@ -1,4 +1,4 @@
-export type { Agent, AgentContext, AgentResult } from "./agent";
-export { createNegotiateAgent } from "./negotiate";
-export { createEmailAgent } from "./email";
-export { createScheduleAgent } from "./schedule";
+export type { Agent, AgentContext, AgentResult } from "./agent.js";
+export { createNegotiateAgent } from "./negotiate.js";
+export { createEmailAgent } from "./email.js";
+export { createScheduleAgent } from "./schedule.js";

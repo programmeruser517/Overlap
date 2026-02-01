@@ -1,10 +1,23 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { createBrowserClient } from "@supabase/ssr";
+
+type ChatToken =
+  | { type: "text"; value: string }
+  | { type: "mention"; label: string }
+  | { type: "task"; label: string };
+
+const ACTIONS_STUB = [
+  "create a new email",
+  "schedule a meeting",
+  "send follow-up",
+  "draft a reply",
+  "find a time",
+];
 
 export default function ThreadPage() {
   const params = useParams();
@@ -13,21 +26,117 @@ export default function ThreadPage() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [open, setOpen] = useState(false);
-  const [inputValue, setInputValue] = useState("");
-  const [atQuery, setAtQuery] = useState<string | null>(null);
-  const [taskText, setTaskText] = useState<string | null>(null);
+  const [tokens, setTokens] = useState<ChatToken[]>([]);
+  const [mode, setMode] = useState<"text" | "mention" | "task">("text");
+  const [buffer, setBuffer] = useState("");
+  const [dropdownIndex, setDropdownIndex] = useState(0);
+  const [orgMembers, setOrgMembers] = useState<{ id: string; email: string; name: string }[]>([]);
   const profileRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const updateSymbolState = (value: string) => {
-    setInputValue(value);
-    const lastAt = value.lastIndexOf("@");
-    const lastGt = value.lastIndexOf(">");
-    const atSegment = lastAt >= 0 ? value.slice(lastAt + 1).split(/>/)[0].trim() : "";
-    const taskSegment = lastGt >= 0 ? value.slice(lastGt + 1).trim() : "";
-    setAtQuery(lastAt >= 0 ? atSegment : null);
-    setTaskText(lastGt >= 0 ? taskSegment : null);
+  useEffect(() => {
+    if (loading || notFound) return;
+    fetch("/api/org-members")
+      .then((r) => r.json())
+      .then((d) => setOrgMembers(d.members ?? []))
+      .catch(() => setOrgMembers([]));
+  }, [loading, notFound]);
+
+  const peopleMatches = useMemo(() => {
+    if (mode !== "mention") return [];
+    const q = buffer.toLowerCase().trim();
+    return orgMembers
+      .filter((m) => m.name.toLowerCase().includes(q) || m.email.toLowerCase().includes(q))
+      .map((m) => m.name)
+      .slice(0, 3);
+  }, [mode, buffer, orgMembers]);
+
+  const actionMatches = useMemo(() => {
+    if (mode !== "task") return [];
+    const q = buffer.toLowerCase().trim();
+    return ACTIONS_STUB.filter((a) => a.toLowerCase().includes(q)).slice(0, 3);
+  }, [mode, buffer]);
+
+  const showDropdown = (mode === "mention" && peopleMatches.length > 0) || (mode === "task" && actionMatches.length > 0);
+  const dropdownOptions = mode === "mention" ? peopleMatches : mode === "task" ? actionMatches : [];
+  const selectedOption = dropdownOptions[dropdownIndex] ?? dropdownOptions[0];
+
+  const commitCurrent = () => {
+    const b = buffer.trim();
+    if (mode === "mention" && b) {
+      setTokens((prev) => [...prev, { type: "mention", label: b }]);
+    } else if (mode === "task" && b) {
+      setTokens((prev) => [...prev, { type: "task", label: b }]);
+    }
+    setMode("text");
+    setBuffer("");
+    setDropdownIndex(0);
   };
+
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "@" && mode === "text") {
+      e.preventDefault();
+      if (buffer) setTokens((prev) => [...prev, { type: "text", value: buffer }]);
+      setMode("mention");
+      setBuffer("");
+      setDropdownIndex(0);
+      return;
+    }
+    if (e.key === ">" && mode === "text") {
+      e.preventDefault();
+      if (buffer) setTokens((prev) => [...prev, { type: "text", value: buffer }]);
+      setMode("task");
+      setBuffer("");
+      setDropdownIndex(0);
+      return;
+    }
+    if (e.key === "Escape") {
+      e.preventDefault();
+      commitCurrent();
+      return;
+    }
+    if (e.key === "Enter" && showDropdown) {
+      e.preventDefault();
+      if (selectedOption) {
+        if (mode === "mention") setTokens((prev) => [...prev, { type: "mention", label: selectedOption }]);
+        else setTokens((prev) => [...prev, { type: "task", label: selectedOption }]);
+        setMode("text");
+        setBuffer("");
+        setDropdownIndex(0);
+      }
+      return;
+    }
+    if (e.key === "ArrowDown" && showDropdown) {
+      e.preventDefault();
+      setDropdownIndex((i) => Math.min(i + 1, dropdownOptions.length - 1));
+      return;
+    }
+    if (e.key === "ArrowUp" && showDropdown) {
+      e.preventDefault();
+      setDropdownIndex((i) => Math.max(i - 1, 0));
+      return;
+    }
+    if (e.key === "Backspace" && !buffer && tokens.length > 0) {
+      e.preventDefault();
+      setTokens((prev) => prev.slice(0, -1));
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = e.target.value;
+    if (mode === "mention") {
+      if (v.startsWith("@")) setBuffer(v.slice(1));
+      else { setMode("text"); setBuffer(v); }
+    } else if (mode === "task") {
+      if (v.startsWith(">")) setBuffer(v.slice(1));
+      else { setMode("text"); setBuffer(v); }
+    } else {
+      setBuffer(v);
+    }
+    setDropdownIndex(0);
+  };
+
+  const inputDisplayValue = (mode === "mention" ? "@" : mode === "task" ? ">" : "") + buffer;
 
   useEffect(() => {
     if (!id) return;
@@ -127,32 +236,59 @@ export default function ThreadPage() {
       {!loading && !notFound && (
         <div className="threadPageChatbox">
           <div className="threadPageChatboxInner">
-            {(atQuery !== null || taskText !== null) && (
-              <div className="threadPageChatboxHints">
-                {atQuery !== null && (
-                  <span className="threadPageChatboxHint threadPageChatboxHintAt">
-                    <span className="threadPageChatboxHintSymbol">@</span> Search people in organization
-                    {atQuery && <span className="threadPageChatboxHintQuery"> “{atQuery}”</span>}
-                  </span>
-                )}
-                {taskText !== null && (
-                  <span className="threadPageChatboxHint threadPageChatboxHintTask">
-                    <span className="threadPageChatboxHintSymbol">&gt;</span> Task to do
-                    {taskText && <span className="threadPageChatboxHintQuery"> “{taskText}”</span>}
-                  </span>
-                )}
-              </div>
-            )}
             <div className="threadPageChatboxRow">
-              <textarea
-                ref={inputRef}
-                className="threadPageChatboxInput"
-                placeholder="Message… Use @ to add people, &gt; for the task"
-                value={inputValue}
-                onChange={(e) => updateSymbolState(e.target.value)}
-                rows={1}
-                aria-label="Chat input"
-              />
+              <div className="threadPageChatboxField">
+                {tokens.map((t, i) =>
+                  t.type === "text" ? (
+                    <span key={i} className="threadPageChatboxText">{t.value}</span>
+                  ) : t.type === "mention" ? (
+                    <span key={i} className="threadPageChatboxChip threadPageChatboxChipMention">
+                      <span className="threadPageChatboxChipSymbol">@</span>
+                      {t.label}
+                    </span>
+                  ) : (
+                    <span key={i} className="threadPageChatboxChip threadPageChatboxChipTask">
+                      <span className="threadPageChatboxChipSymbol">&gt;</span>
+                      {t.label}
+                    </span>
+                  )
+                )}
+                <input
+                  ref={inputRef}
+                  type="text"
+                  className="threadPageChatboxInput"
+                  placeholder={tokens.length === 0 ? "Message… @ people in your org, > task" : ""}
+                  value={inputDisplayValue}
+                  onChange={handleInputChange}
+                  onKeyDown={handleInputKeyDown}
+                  aria-label="Chat input"
+                  autoComplete="off"
+                />
+              </div>
+              {showDropdown && (
+                <div className="threadPageChatboxDropdown" role="listbox">
+                  {dropdownOptions.map((opt, i) => (
+                    <button
+                      key={`${mode}-${i}-${opt}`}
+                      type="button"
+                      role="option"
+                      aria-selected={i === dropdownIndex}
+                      className={`threadPageChatboxDropdownItem ${i === dropdownIndex ? "threadPageChatboxDropdownItemActive" : ""}`}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        if (mode === "mention") setTokens((prev) => [...prev, { type: "mention", label: opt }]);
+                        else setTokens((prev) => [...prev, { type: "task", label: opt }]);
+                        setMode("text");
+                        setBuffer("");
+                        setDropdownIndex(0);
+                        inputRef.current?.focus();
+                      }}
+                    >
+                      {mode === "mention" ? opt : opt}
+                    </button>
+                  ))}
+                </div>
+              )}
               <button type="button" className="threadPageChatboxSend" aria-label="Send">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="22" y1="2" x2="11" y2="13" />
@@ -161,8 +297,9 @@ export default function ThreadPage() {
               </button>
             </div>
             <p className="threadPageChatboxLegend">
-              <span><strong>@</strong> search people in organization</span>
-              <span><strong>&gt;</strong> task to do</span>
+              <span><strong>@</strong> people in your organization</span>
+              <span><strong>{">"}</strong> task</span>
+              <span>ESC to finish</span>
             </p>
           </div>
         </div>
@@ -313,26 +450,8 @@ const threadPageCss = `
   max-width:700px;
   margin:0 auto;
 }
-.threadPageChatboxHints{
-  display:flex;
-  flex-wrap:wrap;
-  gap:10px 16px;
-  margin-bottom:8px;
-  font-size:13px;
-  color:var(--thread-muted);
-}
-.threadPageChatboxHint{
-  display:inline-flex;
-  align-items:center;
-  gap:4px;
-}
-.threadPageChatboxHintSymbol{
-  font-weight:700;
-  color:var(--thread-accent);
-}
-.threadPageChatboxHintTask .threadPageChatboxHintSymbol{color:var(--thread-accent2)}
-.threadPageChatboxHintQuery{color:var(--thread-text);font-style:italic}
 .threadPageChatboxRow{
+  position:relative;
   display:flex;
   align-items:flex-end;
   gap:10px;
@@ -342,21 +461,108 @@ const threadPageCss = `
   padding:10px 12px;
   box-shadow:0 1px 3px rgba(15,23,42,.05);
 }
+.threadPageChatboxField{
+  flex:1;
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:6px 8px;
+  min-height:44px;
+  padding:6px 0;
+}
+.threadPageChatboxText{
+  font-size:15px;
+  color:var(--thread-text);
+  white-space:pre-wrap;
+  word-break:break-word;
+}
+.threadPageChatboxChip{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:14px;
+  font-weight:600;
+  border:none;
+  white-space:nowrap;
+}
+.threadPageChatboxChipSymbol{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:20px;
+  height:20px;
+  border-radius:50%;
+  font-size:12px;
+  font-weight:700;
+  line-height:1;
+}
+.threadPageChatboxChipMention{
+  background:rgba(234,88,12,.14);
+  color:#c2410c;
+}
+.threadPageChatboxChipMention .threadPageChatboxChipSymbol{
+  background:#c2410c;
+  color:#fff;
+}
+.threadPageChatboxChipTask{
+  background:rgba(22,163,74,.14);
+  color:#15803d;
+}
+.threadPageChatboxChipTask .threadPageChatboxChipSymbol{
+  background:#15803d;
+  color:#fff;
+}
 .threadPageChatboxInput{
   flex:1;
-  min-height:44px;
-  max-height:120px;
-  padding:10px 12px 8px;
+  min-width:120px;
+  min-height:32px;
+  padding:6px 0;
   font-size:15px;
   font-family:inherit;
   line-height:1.45;
   border:none;
   background:transparent;
   color:var(--thread-text);
-  resize:none;
   outline:none;
 }
 .threadPageChatboxInput::placeholder{color:var(--thread-muted);opacity:.8}
+.threadPageChatboxDropdown{
+  position:absolute;
+  left:12px;
+  right:52px;
+  bottom:100%;
+  margin-bottom:6px;
+  background:#fff;
+  border:1px solid var(--thread-border);
+  border-radius:12px;
+  box-shadow:0 8px 24px rgba(15,23,42,.12);
+  overflow:hidden;
+  z-index:10;
+  max-height:180px;
+  overflow-y:auto;
+}
+.threadPageChatboxDropdownItem{
+  display:block;
+  width:100%;
+  padding:10px 14px;
+  font-size:14px;
+  font-family:inherit;
+  text-align:left;
+  border:none;
+  background:none;
+  color:var(--thread-text);
+  cursor:pointer;
+  transition:background .1s ease;
+}
+.threadPageChatboxDropdownItem:hover,
+.threadPageChatboxDropdownItemActive{
+  background:rgba(37,99,235,.08);
+}
+.threadPageChatboxDropdownItemActive{
+  font-weight:600;
+}
 .threadPageChatboxSend{
   flex-shrink:0;
   width:44px;

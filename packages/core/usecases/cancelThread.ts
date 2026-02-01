@@ -1,7 +1,7 @@
-import type { Thread } from "../domain/models";
-import type { DbPort, ClockPort, AuditPort } from "../ports/index";
-import { NotFoundError } from "../domain/errors";
-import { canCancel } from "../domain/policies";
+import type { Thread } from "../domain/models.js";
+import type { DbPort, ClockPort, AuditPort } from "../ports/index.js";
+import { NotFoundError } from "../domain/errors.js";
+import { canCancel } from "../domain/policies.js";
 
 export interface CancelThreadDeps {
   db: DbPort;

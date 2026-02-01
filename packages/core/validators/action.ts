@@ -1,5 +1,5 @@
-import type { Action } from "../domain/models";
-import { InvalidProposalError } from "../domain/errors";
+import type { Action } from "../domain/models.js";
+import { InvalidProposalError } from "../domain/errors.js";
 
 function isStringArray(a: unknown): a is string[] {
   return Array.isArray(a) && a.every((x) => typeof x === "string");

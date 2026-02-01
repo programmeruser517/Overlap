@@ -1,5 +1,5 @@
-import type { Thread, PromptKind, Participant } from "../domain/models";
-import type { DbPort, ClockPort } from "../ports/index";
+import type { Thread, PromptKind, Participant } from "../domain/models.js";
+import type { DbPort, ClockPort } from "../ports/index.js";
 
 export interface CreateThreadInput {
   ownerId: string;

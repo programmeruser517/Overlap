@@ -1,7 +1,7 @@
-import type { Thread } from "../domain/models";
-import type { DbPort, ClockPort, MailPort, CalendarPort, AuditPort } from "../ports/index";
-import { NotFoundError } from "../domain/errors";
-import { canApprove, actionFromThread } from "../domain/policies";
+import type { Thread } from "../domain/models.js";
+import type { DbPort, ClockPort, MailPort, CalendarPort, AuditPort } from "../ports/index.js";
+import { NotFoundError } from "../domain/errors.js";
+import { canApprove, actionFromThread } from "../domain/policies.js";
 
 export interface ApproveActionDeps {
   db: DbPort;

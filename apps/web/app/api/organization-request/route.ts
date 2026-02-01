@@ -12,7 +12,7 @@ export async function GET() {
     return NextResponse.json({ error: "Not configured" }, { status: 503 });
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("organization_requests")
     .select("organization_name, status, created_at")
     .eq("user_id", userId)
@@ -58,7 +58,7 @@ export async function POST(request: Request) {
 
   const now = new Date().toISOString();
 
-  const { error: upsertError } = await supabase.from("organization_requests").upsert(
+  const { error: upsertError } = await (supabase as any).from("organization_requests").upsert(
     {
       user_id: userId,
       organization_name,

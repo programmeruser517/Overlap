@@ -1,8 +1,8 @@
-import type { Thread } from "../domain/models";
-import type { DbPort, ClockPort, AuditPort } from "../ports/index";
-import type { Agent } from "../agents/agent";
-import { NotFoundError } from "../domain/errors";
-import { canRunPlanning } from "../domain/policies";
+import type { Thread } from "../domain/models.js";
+import type { DbPort, ClockPort, AuditPort } from "../ports/index.js";
+import type { Agent } from "../agents/agent.js";
+import { NotFoundError } from "../domain/errors.js";
+import { canRunPlanning } from "../domain/policies.js";
 
 export interface RunPlanningDeps {
   db: DbPort;
@@ -26,7 +26,7 @@ export async function runPlanning(
   await deps.db.updateThread(threadId, { status: "planning", updatedAt: now });
 
   const agent = thread.kind === "schedule" ? deps.scheduleAgent : deps.emailAgent;
-  const participantIds = thread.participants.map((p) => p.userId).filter((id) => id !== thread.ownerId);
+  const participantIds = thread.participants.map((p: { userId: string }) => p.userId).filter((id: string) => id !== thread.ownerId);
 
   const { proposal } = await agent.plan({
     ownerId: thread.ownerId,
