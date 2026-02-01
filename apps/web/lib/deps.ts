@@ -7,6 +7,7 @@ import {
   createThread,
   runPlanning,
   approveAction,
+  executeProposalWithoutThread,
   cancelThread,
   createScheduleAgent,
   createEmailAgent,
@@ -15,24 +16,28 @@ import {
   createMemoryDb,
   createStubAuth,
   createEmailStub,
-  createCalendarStub,
   createMemoryAudit,
   createClock,
 } from "@overlap/adapters";
 import { getUserId as getSupabaseUserId } from "@/lib/supabase/server";
+import { createWebCalendarPort } from "@/lib/calendar-port";
+import { createSupabaseThreadDb } from "@/lib/supabase-thread-db";
 
-const db = createMemoryDb();
+const supabaseThreadDb = createSupabaseThreadDb();
+const db = supabaseThreadDb ?? createMemoryDb();
 const stubAuth = createStubAuth();
 const mail = createEmailStub();
-const calendar = createCalendarStub();
+const calendar = createWebCalendarPort();
 const audit = createMemoryAudit();
 const clock = createClock();
-const scheduleAgent = createScheduleAgent({});
+const scheduleAgent = createScheduleAgent({ calendar });
 const emailAgent = createEmailAgent({});
 
 export async function getCurrentUserId(): Promise<string | null> {
   const supabaseUserId = await getSupabaseUserId();
   if (supabaseUserId) return supabaseUserId;
+  // When using Supabase DB, don't use stub – require real session so ownership checks match DB.
+  if (supabaseThreadDb) return null;
   return stubAuth.getCurrentUserId();
 }
 
@@ -48,6 +53,10 @@ export const threadApi = {
   async get(id: string) {
     return db.getThread(id);
   },
+  async update(id: string, patch: { prompt?: string; participants?: { userId: string }[]; kind?: "schedule" | "email" }) {
+    const now = clock.now();
+    return db.updateThread(id, { ...patch, updatedAt: now });
+  },
   async list(userId: string) {
     return db.listThreadsForUser(userId);
   },
@@ -60,9 +69,26 @@ export const threadApi = {
       emailAgent,
     });
   },
-  async approve(id: string, userId: string) {
+  async approve(
+    id: string,
+    userId: string,
+    options?: { proposalFromClient?: import("@overlap/core").Proposal }
+  ) {
     return approveAction(id, userId, {
       db,
+      clock,
+      mail,
+      calendar,
+      audit,
+    }, options);
+  },
+  /** Execute proposal when thread is not in this worker's store (e.g. in-memory multi-worker). */
+  async executeProposalOnly(
+    id: string,
+    userId: string,
+    proposal: import("@overlap/core").Proposal
+  ) {
+    return executeProposalWithoutThread(id, userId, proposal, {
       clock,
       mail,
       calendar,

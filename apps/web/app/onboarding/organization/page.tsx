@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
+import LoadingScreen from "@/components/LoadingScreen";
 
 type OrgStatus = "none" | "pending" | "accepted" | "rejected" | null;
 
@@ -79,6 +80,10 @@ export default function OrganizationPage() {
     router.push("/onboarding/connect");
   };
 
+  if (loading) {
+    return <LoadingScreen message="Loading…" />;
+  }
+
   return (
     <main className="orgWrap">
       <header className="orgTopbar">
@@ -122,12 +127,7 @@ export default function OrganizationPage() {
 
         <section className="orgMain">
           <div className="orgCard">
-            {loading ? (
-              <div className="orgState">
-                <span className="orgSpinner" aria-hidden />
-                <p className="orgStateText">Loading…</p>
-              </div>
-            ) : status === "none" ? (
+            {status === "none" ? (
               <form onSubmit={handleSubmitOrg} className="orgForm">
                 <label className="orgLabel">
                   Organization name

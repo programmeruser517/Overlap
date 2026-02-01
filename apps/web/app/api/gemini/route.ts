@@ -6,14 +6,11 @@ import {
   isEmailTask,
   isCalendarTask,
 } from "@/lib/chat-context";
-
-const GEMINI_MODEL = "gemma-3-12b-it";
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+import { callOpenRouter } from "@/lib/openrouter";
 
 export async function POST(request: Request) {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json({ error: "GEMINI_API_KEY not configured" }, { status: 503 });
+  if (!process.env.OPENROUTER_API_KEY) {
+    return NextResponse.json({ error: "OPENROUTER_API_KEY not configured" }, { status: 503 });
   }
 
   const userId = await getUserId();
@@ -46,47 +43,15 @@ export async function POST(request: Request) {
     calendarRequested,
   });
 
-  const payload = JSON.stringify({
-    contents: [{ parts: [{ text: fullPrompt }] }],
-  });
-  const maxRetries = 3;
-  const retryableStatuses = [429, 503];
-
-  let res: Response | null = null;
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    res = await fetch(`${GEMINI_URL}?key=${encodeURIComponent(apiKey)}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: payload,
-    });
-
-    if (res.ok) break;
-    if (attempt < maxRetries && retryableStatuses.includes(res.status)) {
-      const delayMs = Math.min(1000 * Math.pow(2, attempt), 8000);
-      await new Promise((r) => setTimeout(r, delayMs));
-      continue;
-    }
-    break;
-  }
-
-  if (!res || !res.ok) {
-    const errText = await res?.text() ?? "";
-    console.error("Gemini API error:", res?.status, errText);
-    const isOverloaded = res?.status === 503 || (errText && /overloaded|UNAVAILABLE/i.test(errText));
-    const message = isOverloaded
-      ? "The model is overloaded. Please try again in a moment."
-      : "Gemini request failed. Please try again.";
+  try {
+    const text = await callOpenRouter([{ role: "user", content: fullPrompt }]);
+    return NextResponse.json({ text });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "OpenRouter request failed. Please try again.";
+    const isOverloaded = /overloaded|503/i.test(message);
     return NextResponse.json(
-      { error: message, details: errText.slice(0, 300) },
-      { status: 502 }
+      { error: message, details: message.slice(0, 300) },
+      { status: isOverloaded ? 503 : 502 }
     );
   }
-
-  const data = (await res.json()) as {
-    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-  };
-  const text =
-    data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-
-  return NextResponse.json({ text });
 }

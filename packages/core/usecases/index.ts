@@ -4,5 +4,7 @@ export { runPlanning } from "./runPlanning";
 export type { RunPlanningDeps } from "./runPlanning";
 export { approveAction } from "./approveAction";
 export type { ApproveActionDeps } from "./approveAction";
+export { executeProposalWithoutThread } from "./executeProposalWithoutThread";
+export type { ExecuteProposalDeps } from "./executeProposalWithoutThread";
 export { cancelThread } from "./cancelThread";
 export type { CancelThreadDeps } from "./cancelThread";

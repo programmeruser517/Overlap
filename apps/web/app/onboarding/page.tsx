@@ -25,6 +25,10 @@ export default function OnboardingPage() {
   const router = useRouter();
 
   useEffect(() => {
+    document.title = "Onboarding";
+  }, []);
+
+  useEffect(() => {
     fetch("/api/onboarding")
       .then((r) => r.json())
       .then((d) => {
@@ -293,6 +297,7 @@ export default function OnboardingPage() {
               />
             </div>
              <div className="brandText">
+                <span className="brandTitle">Onboarding</span>
                 <span className="brandSub">AI-to-AI coordination in all your workflows.</span>
               </div>
           </div>

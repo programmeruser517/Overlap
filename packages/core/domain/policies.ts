@@ -14,12 +14,12 @@ export function canCancel(thread: Thread): boolean {
 }
 
 export function canRunPlanning(thread: Thread): boolean {
-  return thread.status === "draft";
+  return thread.status === "draft" || thread.status === "proposed";
 }
 
-/** Build the concrete action from an approved thread (for execution). */
+/** Build the concrete action from a thread with a proposal (for execution). */
 export function actionFromThread(thread: Thread): Action | null {
-  if (thread.status !== "approved" || !thread.proposal) return null;
+  if (!thread.proposal) return null;
   const p = thread.proposal;
   if (p.schedule) {
     return {

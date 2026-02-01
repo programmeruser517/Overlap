@@ -37,7 +37,8 @@ export async function GET() {
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const threads = await threadApi.list(userId);
+    const all = await threadApi.list(userId);
+    const threads = all.filter((t) => t.status === "done" || t.status === "cancelled");
     return NextResponse.json({ threads });
   } catch (e) {
     console.error(e);

@@ -7,8 +7,8 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-    const thread = await threadApi.run(id);
-    return NextResponse.json({ thread });
+    const result = await threadApi.run(id);
+    return NextResponse.json({ thread: result.thread, reasoning: result.reasoning });
   } catch (e) {
     console.error(e);
     return NextResponse.json(

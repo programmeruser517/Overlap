@@ -79,6 +79,14 @@ export async function getChatContext(
   return out;
 }
 
+/**
+ * Fetches context for another user (e.g. recipient). Used to initialize their "agent"
+ * with DB data (onboarding, org). No email/calendar stubs for other user.
+ */
+export async function getOtherUserContext(otherUserId: string): Promise<ChatContext> {
+  return getChatContext(otherUserId, { includeEmailStub: false, includeCalendarStub: false });
+}
+
 export function formatContextForPrompt(ctx: ChatContext, prompt: string): string {
   return formatContextForPromptWithOptions(ctx, prompt, {});
 }

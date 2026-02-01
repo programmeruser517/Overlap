@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
+import LoadingScreen from "@/components/LoadingScreen";
 
 export default function AppHome() {
   const [open, setOpen] = useState(false);
@@ -12,6 +13,8 @@ export default function AppHome() {
   const [getToMain, setGetToMain] = useState<boolean | null>(null);
   const [saving, setSaving] = useState(false);
   const [creatingThread, setCreatingThread] = useState(false);
+  const [threads, setThreads] = useState<Array<{ id: string; prompt?: string; status?: string; proposal?: { summary?: string }; createdAt?: string; updatedAt?: string }>>([]);
+  const [viewMode, setViewMode] = useState<"linear" | "graph">("linear");
   const profileRef = useRef<HTMLDivElement>(null);
   const [formData, setFormData] = useState({
     name: "",
@@ -41,6 +44,14 @@ export default function AppHome() {
       router.replace("/onboarding");
     }
   }, [getToMain, router]);
+
+  useEffect(() => {
+    if (getToMain !== true) return;
+    fetch("/api/thread")
+      .then((r) => r.json())
+      .then((d) => setThreads(Array.isArray(d?.threads) ? d.threads : []))
+      .catch(() => setThreads([]));
+  }, [getToMain]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -133,6 +144,7 @@ export default function AppHome() {
       });
       const data = await res.json().catch(() => ({}));
       if (data?.thread?.id) {
+        setThreads((prev) => [data.thread, ...prev]);
         router.push(`/app/thread/${data.thread.id}`);
       } else {
         setCreatingThread(false);
@@ -243,11 +255,7 @@ export default function AppHome() {
   ];
 
   if (getToMain !== true) {
-    return (
-      <main className="wrap appMain" style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <p style={{ color: "var(--muted)" }}>Loading…</p>
-      </main>
-    );
+    return <LoadingScreen />;
   }
 
   return (
@@ -259,6 +267,7 @@ export default function AppHome() {
                 <Image src="/overlap_blue.png" alt="Overlap" width={88} height={88} priority />
               </div>
               <div className="brandText">
+                <span className="brandTitle">Workthreads</span>
                 <span className="brandSub">AI-to-AI coordination in all your workflows.</span>
               </div>
             </div>
@@ -310,6 +319,39 @@ export default function AppHome() {
               >
                 {creatingThread ? "Creating…" : "New thread"}
               </button>
+              <div className="viewSliderWrap">
+                <div className="viewSliderLabels">
+                  <span className={`viewSliderLabelItem ${viewMode === "linear" ? "viewSliderLabelActive" : ""}`}>
+                    <span className="viewSliderIcon" aria-hidden>
+                      <svg width="16" height="10" viewBox="0 0 24 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                        <line x1="2" y1="7" x2="8" y2="7" />
+                        <line x1="8" y1="7" x2="14" y2="7" />
+                        <line x1="14" y1="7" x2="22" y2="7" />
+                      </svg>
+                    </span>
+                    linear
+                  </span>
+                  <span className={`viewSliderLabelItem ${viewMode === "graph" ? "viewSliderLabelActive" : ""}`}>
+                    <span className="viewSliderIcon" aria-hidden>
+                      <svg width="16" height="10" viewBox="0 0 24 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="2 12 6 8 10 10 14 4 18 6 22 2" />
+                      </svg>
+                    </span>
+                    graph
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={1}
+                  step={1}
+                  value={viewMode === "graph" ? 1 : 0}
+                  onChange={(e) => setViewMode(e.target.value === "1" ? "graph" : "linear")}
+                  className="viewSlider"
+                  aria-label="View mode: linear or graph"
+                />
+                <p className="viewSliderCaption">VIEW</p>
+              </div>
             </div>
           </div>
         </section>
@@ -320,11 +362,40 @@ export default function AppHome() {
               <thead>
                 <tr>
                   <th>Title</th>
-                  <th>Created</th>
+                  <th>Updated</th>
                   <th></th>
                 </tr>
               </thead>
-              <tbody />
+              <tbody>
+                {threads.length === 0 ? (
+                  <tr>
+                    <td colSpan={3} style={{ color: "var(--muted)", padding: "24px 16px", textAlign: "center" }}>
+                      No threads yet. Create one with &quot;New thread&quot; above.
+                    </td>
+                  </tr>
+                ) : (
+                  threads.map((t) => {
+                    const title = t.proposal?.summary ?? (typeof t.prompt === "string" && t.prompt.trim() ? t.prompt.trim().slice(0, 80) + (t.prompt.length > 80 ? "…" : "") : "Untitled");
+                    const dateStr = t.updatedAt ?? t.createdAt ?? "";
+                    const displayDate = dateStr ? new Date(dateStr).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "—";
+                    return (
+                      <tr key={t.id}>
+                        <td>
+                          <Link href={`/app/thread/${t.id}`} className="threadRowLink">
+                            {title}
+                          </Link>
+                        </td>
+                        <td style={{ color: "var(--muted)" }}>{displayDate}</td>
+                        <td style={{ textAlign: "right" }}>
+                          <Link href={`/app/thread/${t.id}`} className="threadRowLink">
+                            View
+                          </Link>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
             </table>
           </div>
         </section>
@@ -415,6 +486,8 @@ a{color:inherit;text-decoration:none}
 .threadsTable th:last-child{text-align:right}
 .threadsTable td{padding:12px 16px;border-bottom:1px solid var(--border);color:var(--text)}
 .threadsTable tbody tr:last-child td{border-bottom:none}
+.threadRowLink{color:var(--accent);font-weight:500}
+.threadRowLink:hover{text-decoration:underline}
 
 .topbar{
   position:sticky;top:0;z-index:50;
@@ -551,6 +624,88 @@ a{color:inherit;text-decoration:none}
   gap:18px;
   max-width:620px;
   width:100%;
+}
+
+.viewSliderWrap{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:6px;
+  margin-top:8px;
+  width:100%;
+  max-width:240px;
+}
+.viewSliderLabels{
+  display:flex;
+  justify-content:space-between;
+  width:100%;
+  font-size:12px;
+  font-weight:600;
+  color:var(--muted);
+}
+.viewSliderLabelItem{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+}
+.viewSliderLabels .viewSliderLabelActive{
+  color:var(--accent);
+}
+.viewSliderLabels .viewSliderLabelActive .viewSliderIcon{
+  color:var(--accent);
+}
+.viewSliderIcon{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--muted);
+  flex-shrink:0;
+}
+.viewSlider{
+  width:100%;
+  height:8px;
+  -webkit-appearance:none;
+  appearance:none;
+  background:transparent;
+}
+.viewSlider::-webkit-slider-runnable-track{
+  height:4px;
+  background:var(--border);
+  border-radius:2px;
+}
+.viewSlider::-moz-range-track{
+  height:4px;
+  background:var(--border);
+  border-radius:2px;
+}
+.viewSlider::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  appearance:none;
+  width:16px;
+  height:16px;
+  border-radius:50%;
+  background:var(--accent);
+  border:2px solid #fff;
+  box-shadow:0 1px 4px rgba(0,0,0,.2);
+  margin-top:-6px;
+  cursor:pointer;
+}
+.viewSlider::-moz-range-thumb{
+  width:16px;
+  height:16px;
+  border-radius:50%;
+  background:var(--accent);
+  border:2px solid #fff;
+  box-shadow:0 1px 4px rgba(0,0,0,.2);
+  cursor:pointer;
+}
+.viewSliderCaption{
+  font-size:11px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  color:var(--muted);
+  margin:0;
 }
 
 .pill{

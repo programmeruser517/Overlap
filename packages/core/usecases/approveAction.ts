@@ -1,4 +1,4 @@
-import type { Thread } from "../domain/models";
+import type { Thread, Proposal } from "../domain/models";
 import type { DbPort, ClockPort, MailPort, CalendarPort, AuditPort } from "../ports/index";
 import { NotFoundError } from "../domain/errors";
 import { canApprove, actionFromThread } from "../domain/policies";
@@ -11,10 +11,16 @@ export interface ApproveActionDeps {
   audit: AuditPort;
 }
 
+/** Optional proposal from client; used when DB thread has no proposal (e.g. in-memory multi-worker). */
+export interface ApproveActionOptions {
+  proposalFromClient?: Proposal;
+}
+
 export async function approveAction(
   threadId: string,
   userId: string,
-  deps: ApproveActionDeps
+  deps: ApproveActionDeps,
+  options?: ApproveActionOptions
 ): Promise<Thread> {
   const thread = await deps.db.getThread(threadId);
   if (!thread) throw new NotFoundError("Thread", threadId);
@@ -23,7 +29,8 @@ export async function approveAction(
     throw new Error(`Thread ${threadId} cannot be approved (status: ${thread.status})`);
   }
 
-  const action = actionFromThread(thread);
+  const proposalToUse = options?.proposalFromClient ?? thread.proposal;
+  const action = actionFromThread({ ...thread, proposal: proposalToUse });
   if (!action) throw new Error("No action derived from proposal");
 
   const now = deps.clock.now();

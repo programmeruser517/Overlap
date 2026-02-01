@@ -73,7 +73,7 @@ export async function getSession(): Promise<{ user: { id: string; email?: string
         .select("id, email")
         .eq("email", user.email)
         .limit(1)
-        .single();
+        .single();                                          
       if (existing) appUser = existing;
     }
   }
