@@ -447,28 +447,20 @@ export default function ThreadPage() {
             Thread not found. <Link href="/app" className="threadPageLink">Back to app</Link>
           </p>
         )}
-        {!loading && !notFound && geminiLastPrompt && (
+        {!loading && !notFound && geminiLoading && (
           <div className="threadPageCenterHeader">
             <div className="threadPageCenterHeaderInner">
-              <span className="threadPageCenterHeaderLabel">You asked</span>
-              <p className="threadPageCenterHeaderPrompt">{geminiLastPrompt}</p>
-              <div className="threadPageCenterHeaderMeta">
-                {geminiLoading && (
-                  <>
-                    <span className="threadPageCenterHeaderTimer">
-                      Est. ~30s · {Math.floor(geminiElapsedSec / 60)}:{String(geminiElapsedSec % 60).padStart(2, "0")}
-                    </span>
-                    <button
-                      type="button"
-                      className="threadPageCenterHeaderStop"
-                      onClick={handleStopGemini}
-                      aria-label="Stop"
-                    >
-                      Stop
-                    </button>
-                  </>
-                )}
-              </div>
+              <span className="threadPageCenterHeaderTimer">
+                Est. ~30s · {Math.floor(geminiElapsedSec / 60)}:{String(geminiElapsedSec % 60).padStart(2, "0")}
+              </span>
+              <button
+                type="button"
+                className="threadPageCenterHeaderStop"
+                onClick={handleStopGemini}
+                aria-label="Stop"
+              >
+                Stop
+              </button>
             </div>
           </div>
         )}
@@ -540,6 +532,12 @@ export default function ThreadPage() {
       {!loading && !notFound && (
         <div className="threadPageChatbox">
           <div className="threadPageChatboxInner">
+            {geminiLastPrompt && (
+              <div className="threadPageComposedBar" aria-live="polite">
+                <span className="threadPageComposedPrefix">You asked to </span>
+                <span className="threadPageComposedText">{geminiLastPrompt}</span>
+              </div>
+            )}
             <div className="threadPageChatboxRow">
               <div
                 ref={fieldRef}
@@ -998,6 +996,34 @@ const threadPageCss = `
 .threadPageChatboxInner{
   max-width:700px;
   margin:0 auto;
+}
+.threadPageComposedBar{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:6px 8px;
+  margin-bottom:10px;
+  padding:10px 14px;
+  background:rgba(15,23,42,.04);
+  border:1px solid var(--thread-border);
+  border-radius:12px;
+  font-size:14px;
+  line-height:1.5;
+  color:var(--thread-text);
+}
+.threadPageComposedPrefix{
+  color:var(--thread-muted);
+  font-weight:500;
+}
+.threadPageComposedText{
+  color:var(--thread-text);
+  white-space:pre-wrap;
+  word-break:break-word;
+}
+.threadPageComposedChip{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
 }
 .threadPageChatboxRow{
   position:relative;
