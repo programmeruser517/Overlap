@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
+import LoadingScreen from "@/components/LoadingScreen";
 
 type LinkProvider = "google" | "microsoft";
 
@@ -90,15 +91,7 @@ export default function ConnectPage() {
   };
 
   if (!ready) {
-    return (
-      <main className="connectWrap">
-        <div className="connectLoader" role="status" aria-label="Loading">
-          <Image src="/overlap_blue_no_text.png" alt="" width={56} height={56} priority />
-          <span className="connectSpinner" aria-hidden />
-        </div>
-        <style>{connectCss}</style>
-      </main>
-    );
+    return <LoadingScreen message="Loading…" />;
   }
 
   return (
@@ -109,7 +102,7 @@ export default function ConnectPage() {
             <div className="connectLogoWrap">
               <Image src="/overlap_blue.png" alt="Overlap" width={48} height={48} priority />
             </div>
-            <span className="connectBrandSub">Onboarding</span>
+            <span className="connectBrandSub connectBrandSubNoCaps">Personal Info</span>
           </Link>
           <div className="connectTopbarRight">
             <Link href="/onboarding/organization" className="connectBackLink">
@@ -320,6 +313,7 @@ a{color:inherit;text-decoration:none}
 .connectLogoWrap{flex-shrink:0;width:48px;height:48px;display:block;line-height:0}
 .connectLogoWrap img{width:100%;height:100%;object-fit:contain;display:block}
 .connectBrandSub{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.connectBrandSubNoCaps{text-transform:none}
 .connectProfileWrap{position:relative}
 .connectAvatar{
   width:36px;height:36px;

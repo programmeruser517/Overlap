@@ -1,4 +1,4 @@
-import type { Thread } from "../domain/models";
+import type { Thread, Proposal } from "../domain/models";
 import type { DbPort, ClockPort, AuditPort } from "../ports/index";
 import type { Agent } from "../agents/agent";
 import { NotFoundError } from "../domain/errors";
@@ -12,10 +12,16 @@ export interface RunPlanningDeps {
   emailAgent: Agent;
 }
 
+export interface RunPlanningResult {
+  thread: Thread;
+  proposal: Proposal;
+  reasoning?: string;
+}
+
 export async function runPlanning(
   threadId: string,
   deps: RunPlanningDeps
-): Promise<Thread> {
+): Promise<RunPlanningResult> {
   const thread = await deps.db.getThread(threadId);
   if (!thread) throw new NotFoundError("Thread", threadId);
   if (!canRunPlanning(thread)) {
@@ -28,7 +34,7 @@ export async function runPlanning(
   const agent = thread.kind === "schedule" ? deps.scheduleAgent : deps.emailAgent;
   const participantIds = thread.participants.map((p: { userId: string }) => p.userId).filter((id: string) => id !== thread.ownerId);
 
-  const { proposal } = await agent.plan({
+  const { proposal, reasoning } = await agent.plan({
     ownerId: thread.ownerId,
     participantIds,
     prompt: thread.prompt,
@@ -41,7 +47,8 @@ export async function runPlanning(
     updatedAt: deps.clock.now(),
   });
 
-  if (updated) {
+  const outThread = updated ?? thread;
+  if (outThread) {
     await deps.audit.log({
       threadId,
       action: "planning_complete",
@@ -51,5 +58,6 @@ export async function runPlanning(
     });
   }
 
-  return updated ?? thread;
+  const threadWithProposal: Thread = { ...outThread, proposal, status: "proposed", updatedAt: deps.clock.now() };
+  return { thread: threadWithProposal, proposal, reasoning };
 }

@@ -130,3 +130,89 @@ export async function fetchCalendarEventsForWeek(userId: string): Promise<Calend
       end: formatEventTime(e.end ?? e.start!),
     }));
 }
+
+/** ISO busy-slot shape for CalendarPort. */
+export type BusySlot = { start: string; end: string };
+
+/**
+ * Fetches busy slots (ISO start/end) for a user in the given window.
+ * Used by the schedule agent to compute overlap across multiple users' calendars.
+ */
+export async function fetchCalendarBusySlots(
+  userId: string,
+  fromISO: string,
+  toISO: string
+): Promise<BusySlot[]> {
+  const accessToken = await getValidGoogleAccessToken(userId);
+  if (!accessToken) return [];
+
+  const url = new URL(CALENDAR_LIST_URL);
+  url.searchParams.set("timeMin", fromISO);
+  url.searchParams.set("timeMax", toISO);
+  url.searchParams.set("singleEvents", "true");
+  url.searchParams.set("orderBy", "startTime");
+  url.searchParams.set("maxResults", "50");
+
+  const res = await fetch(url.toString(), {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+
+  if (!res.ok) return [];
+
+  const data = (await res.json()) as {
+    items?: Array<{
+      start?: { dateTime?: string; date?: string };
+      end?: { dateTime?: string; date?: string };
+    }>;
+  };
+
+  const items = data.items ?? [];
+  return items
+    .filter((e) => e.start && (e.start.dateTime || e.start.date))
+    .map((e) => {
+      const start = e.start!.dateTime ?? e.start!.date!;
+      const end = (e.end ?? e.start)!.dateTime ?? (e.end ?? e.start)!.date!;
+      return { start, end };
+    });
+}
+
+export interface CreateCalendarEventInput {
+  start: string;
+  end: string;
+  title: string;
+}
+
+/**
+ * Creates a calendar event on the user's primary Google Calendar.
+ * Uses linked_accounts (Google) for the user; throws if no token or API error.
+ */
+export async function createCalendarEvent(
+  userId: string,
+  input: CreateCalendarEventInput
+): Promise<void> {
+  const accessToken = await getValidGoogleAccessToken(userId);
+  if (!accessToken) {
+    throw new Error("Google Calendar not connected. Connect your Google account in Settings to add events.");
+  }
+
+  const url = CALENDAR_LIST_URL;
+  const body = {
+    summary: input.title || "Meeting",
+    start: { dateTime: input.start, timeZone: "UTC" },
+    end: { dateTime: input.end, timeZone: "UTC" },
+  };
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Failed to create calendar event: ${res.status} ${errText}`);
+  }
+}

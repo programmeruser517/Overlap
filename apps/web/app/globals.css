@@ -64,7 +64,8 @@ a:hover {
 
 .appViewer {
   min-height: 100vh;
-  background: var(--bg);
+  background: #eef0f7;
+  background-image: linear-gradient(160deg, #f4f5fa 0%, #eef0f7 35%, #e6e9f4 100%);
   padding: 0;
 }
 

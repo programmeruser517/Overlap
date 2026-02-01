@@ -2,10 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { signInWithPassword } from "@/lib/supabase/client";
 
 export default function LoginPage() {
+  useEffect(() => {
+    document.title = "Login";
+  }, []);
+
   const [intent, setIntent] = useState<"signin" | "signup">("signin");
   const [mode, setMode] = useState<"magic" | "password">("magic");
   const [email, setEmail] = useState("");
@@ -71,6 +75,7 @@ export default function LoginPage() {
                 />
               </div>
               <div className="brandText">
+                <span className="brandHeader">Login</span>
                 <span className="brandSub">AI-to-AI coordination in all your workflows.</span>
               </div>
             </Link>
@@ -286,6 +291,8 @@ a{color:inherit;text-decoration:none}
 .brand{display:flex;align-items:center;gap:12px}
 .logoWrap{flex-shrink:0;width:88px;height:88px;display:block;line-height:0}
 .logoWrap img{width:100%;height:100%;object-fit:contain;display:block;vertical-align:middle}
+.brandText{display:flex;flex-direction:column;gap:4px}
+.brandHeader{font-size:18px;font-weight:700;color:var(--text);letter-spacing:-.02em}
 .brandSub{font-size:14px;color:var(--muted);font-weight:500}
 .nav{display:flex;align-items:center;gap:6px}
 .navLink{
