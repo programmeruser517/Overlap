@@ -98,10 +98,10 @@ function looksLikeAgreement(text: string) {
 }
 
 async function callLLM(prompt: string, signal: AbortSignal) {
-  const res = await fetch("/api/gemini", {
+  const res = await fetch("/api/llm", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt, provider: "gemini" }),
+    body: JSON.stringify({ prompt }),
     signal,
   });
   const data = await res.json().catch(() => ({}));

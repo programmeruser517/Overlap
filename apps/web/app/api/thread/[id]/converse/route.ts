@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getUserId } from "@/lib/supabase/server";
 import { getChatContext, getOtherUserContext } from "@/lib/chat-context";
-import { callGemini } from "@/lib/gemini";
+import { callOpenRouter } from "@/lib/openrouter";
 
 const MAX_TURNS = 6;
 
@@ -73,7 +73,7 @@ export async function POST(
           const initialSystem = `You are the current user's agent. ${actionSummary}
 Your context: ${ourContextStr}
 Write ONE short message (2-4 sentences) to ${otherName}'s agent: introduce what you sent/scheduled and ask for their response. Be professional and concise. Output only the message, no labels.`;
-          const ourFirst = await callGemini(initialSystem, "Generate your first message to the other agent.");
+          const ourFirst = await callOpenRouter([{ role: "system", content: initialSystem }, { role: "user", content: "Generate your first message to the other agent." }]);
           lastMessage = ourFirst;
           const turn1: ConverseTurn = { role: "our_agent", message: ourFirst, agentName: "Your agent" };
           controller.enqueue(streamLine(encoder, { type: "turn", turn: turn1 }));
@@ -86,7 +86,7 @@ The other user's agent just said to you:
 ${lastMessage}
 ---
 Respond as ${otherName}'s agent in first person (e.g. "I received your email..."). One short paragraph. Output only the message.`;
-            const otherReply = await callGemini(otherSystem, "Respond to the message above.");
+            const otherReply = await callOpenRouter([{ role: "system", content: otherSystem }, { role: "user", content: "Respond to the message above." }]);
             lastMessage = otherReply;
             const turnOther: ConverseTurn = { role: "other_agent", message: otherReply, agentName: `${otherName}'s agent` };
             controller.enqueue(streamLine(encoder, { type: "turn", turn: turnOther }));
@@ -98,7 +98,7 @@ ${otherName}'s agent just said:
 ${lastMessage}
 ---
 Reply briefly. One short paragraph. Output only the message.`;
-            const ourReply = await callGemini(ourSystem, "Reply to the other agent.");
+            const ourReply = await callOpenRouter([{ role: "system", content: ourSystem }, { role: "user", content: "Reply to the other agent." }]);
             lastMessage = ourReply;
             const turnOur: ConverseTurn = { role: "our_agent", message: ourReply, agentName: "Your agent" };
             controller.enqueue(streamLine(encoder, { type: "turn", turn: turnOur }));

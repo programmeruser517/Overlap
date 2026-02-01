@@ -1,19 +1,26 @@
 /**
  * OpenRouter API client. Single non-streaming call.
- * Used by callGemini (agent-to-agent) and by /api/gemini routes.
+ * Used by /api/llm and by /api/thread/[id]/converse (agent-to-agent).
  */
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL ?? "google/gemini-2.5-flash";
+const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL ?? "openai/gpt-5.1";
 
 export type OpenRouterMessage = { role: "system" | "user" | "assistant"; content: string };
 
-export async function callOpenRouter(messages: OpenRouterMessage[]): Promise<string> {
+/** Model to use. If not provided, uses OPENROUTER_MODEL env or "openai/gpt-5.1". */
+export const OPENROUTER_MODEL_GPT_5_1 = "openai/gpt-5.1";
+
+export async function callOpenRouter(
+  messages: OpenRouterMessage[],
+  modelOverride?: string
+): Promise<string> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new Error("OPENROUTER_API_KEY not configured");
 
+  const model = modelOverride ?? OPENROUTER_MODEL ?? OPENROUTER_MODEL_GPT_5_1;
   const body = JSON.stringify({
-    model: OPENROUTER_MODEL,
+    model,
     messages,
   });
 

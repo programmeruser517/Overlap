@@ -8,7 +8,7 @@ import {
 } from "@/lib/chat-context";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL ?? "google/gemini-2.5-flash";
+const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL ?? "openai/gpt-5.1";
 
 export async function POST(request: Request) {
   const apiKey = process.env.OPENROUTER_API_KEY;
