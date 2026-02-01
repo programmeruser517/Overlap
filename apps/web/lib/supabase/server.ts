@@ -85,3 +85,10 @@ export async function getUserId(): Promise<string | null> {
   const session = await getSession();
   return session?.user?.id ?? null;
 }
+
+export async function getUserEmail(): Promise<string | null> {
+  const session = await getSession();
+  const email = session?.user?.email;
+  return typeof email === "string" && email.trim() ? email.trim() : null;
+}
+
