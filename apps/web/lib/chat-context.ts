@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { fetchCalendarEventsForWeek } from "@/lib/google-calendar";
 
 export type ChatContext = {
   onboardingData: Record<string, unknown>;
@@ -68,8 +69,11 @@ export async function getChatContext(
   }
 
   if (options.includeCalendarStub) {
-    // TODO: fetch calendar for week via Google Calendar API using linked_accounts token
-    out.calendarThisWeek = []; // placeholder; replace with real events when wired
+    try {
+      out.calendarThisWeek = await fetchCalendarEventsForWeek(userId);
+    } catch {
+      out.calendarThisWeek = [];
+    }
   }
 
   return out;
