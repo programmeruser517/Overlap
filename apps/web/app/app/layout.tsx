@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { getSession } from "@/lib/supabase/server";
 
 export default async function AppLayout({
@@ -15,19 +14,5 @@ export default async function AppLayout({
     const session = await getSession();
     if (!session) redirect("/login");
   }
-  return (
-    <div className="appShell">
-      <nav className="appNav">
-        <div className="appNavInner">
-          <Link href="/app" className="appNavLink">
-            Home
-          </Link>
-          <Link href="/app/settings" className="appNavLink">
-            Settings
-          </Link>
-        </div>
-      </nav>
-      <div className="appViewer">{children}</div>
-    </div>
-  );
+  return <div className="appViewer">{children}</div>;
 }

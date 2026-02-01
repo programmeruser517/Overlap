@@ -50,9 +50,20 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_magic_link_token ON magic_link_tokens(toke
 CREATE INDEX IF NOT EXISTS idx_magic_link_expires ON magic_link_tokens(expires_at);
 CREATE INDEX IF NOT EXISTS idx_app_users_email ON app_users(email);
 
+-- Onboarding: one row per user (user_id = app_users.id or auth.users.id)
+CREATE TABLE IF NOT EXISTS user_onboarding (
+  user_id TEXT PRIMARY KEY,
+  onboarding_data JSONB NOT NULL DEFAULT '{}',
+  get_to_main BOOLEAN NOT NULL DEFAULT false,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_onboarding_get_to_main ON user_onboarding(get_to_main);
+
 -- RLS: enable on all tables. With no policies, anon key has no access.
 -- Service role (used server-side) bypasses RLS. Add policies only if you expose tables to the client.
 ALTER TABLE threads ENABLE ROW LEVEL SECURITY;
 ALTER TABLE audit_log ENABLE ROW LEVEL SECURITY;
 ALTER TABLE app_users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE magic_link_tokens ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_onboarding ENABLE ROW LEVEL SECURITY;

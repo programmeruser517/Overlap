@@ -15,7 +15,6 @@
 body {
   margin: 0;
   font-family: system-ui, -apple-system, sans-serif;
-  background: var(--bg);
   color: var(--text);
   line-height: 1.5;
   min-height: 100vh;
@@ -29,11 +28,12 @@ a:hover {
   color: var(--accent-hover);
 }
 
-/* App shell: nav + padded content */
+/* App shell: nav + padded content (only for /app) */
 .appShell {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background: var(--bg);
 }
 
 .appNav {
@@ -63,6 +63,7 @@ a:hover {
 }
 
 .appViewer {
-  flex: 1;
-  padding: 1.25rem 1rem;
+  min-height: 100vh;
+  background: var(--bg);
+  padding: 0;
 }

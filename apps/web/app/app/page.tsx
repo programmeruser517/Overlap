@@ -8,6 +8,8 @@ import { createBrowserClient } from "@supabase/ssr";
 export default function AppHome() {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
+  const [getToMain, setGetToMain] = useState<boolean | null>(null);
+  const [saving, setSaving] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
   const [formData, setFormData] = useState({
     name: "",
@@ -19,6 +21,18 @@ export default function AppHome() {
     buffer: "No buffer"
   });
   const router = useRouter();
+
+  useEffect(() => {
+    fetch("/api/onboarding")
+      .then((r) => r.json())
+      .then((d) => {
+        setGetToMain(d.get_to_main === true);
+        if (d.onboarding_data && typeof d.onboarding_data === "object") {
+          setFormData((prev) => ({ ...prev, ...d.onboarding_data }));
+        }
+      })
+      .catch(() => setGetToMain(false));
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -56,6 +70,30 @@ export default function AppHome() {
     setStep(step + 1);
   };
   const handleBack = () => setStep(step - 1);
+
+  const handleSavePreferences = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/onboarding", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          onboarding_data: formData,
+          complete: true,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        return;
+      }
+      if (data.get_to_main) {
+        setGetToMain(true);
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleReset = () => {
     setFormData((prev) => ({
       name: prev.name,
@@ -170,6 +208,50 @@ export default function AppHome() {
 
   const currentQuestion = questions[step];
   const isLastStep = step === questions.length;
+
+  if (getToMain === true) {
+    return (
+      <main className="wrap">
+        <header className="topbar">
+          <div className="container topbarInner">
+            <div className="brand">
+              <div className="logoWrap">
+                <Image src="/overlap_blue.png" alt="Overlap" width={88} height={88} priority />
+              </div>
+              <div className="brandText">
+                <span className="brandSub">AI-to-AI coordination for scheduling.</span>
+              </div>
+            </div>
+            <div className="profileWrap" ref={profileRef}>
+              <button className="avatar" onClick={() => setOpen(!open)} aria-label="Profile menu">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </button>
+              {open && (
+                <div className="profileMenu">
+                  <button onClick={handleLogout} className="profileItem">Log out</button>
+                </div>
+              )}
+            </div>
+          </div>
+        </header>
+        <section className="hero">
+          <div className="container heroGrid single">
+            <div className="centerStack">
+              <h1 className="h1 small">You&apos;re all set.</h1>
+              <p className="sub center">Create a thread to get started.</p>
+              <a className="btn btnPrimary btnLarge" href="/app">
+                New thread
+              </a>
+            </div>
+          </div>
+        </section>
+        <style>{css}</style>
+      </main>
+    );
+  }
 
   return (
     <main className="wrap">
@@ -366,8 +448,12 @@ export default function AppHome() {
                   </div>
 
                   <div className="actionRow">
-                    <button className="btn btnPrimary btnLarge full">
-                      Save preferences <span className="arrow">→</span>
+                    <button
+                      className="btn btnPrimary btnLarge full"
+                      onClick={handleSavePreferences}
+                      disabled={saving}
+                    >
+                      {saving ? "Saving…" : "Save preferences"} <span className="arrow">→</span>
                     </button>
                     <div className="actionRowSplit">
                       <button className="btn btnGhost" onClick={handleBack}>

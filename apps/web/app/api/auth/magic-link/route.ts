@@ -4,7 +4,9 @@ import { randomUUID } from "crypto";
 
 const TOKEN_TTL_MINUTES = 15;
 
-async function sendMagicLinkEmail(to: string, magicLink: string): Promise<boolean> {
+const DEV_EMAIL = "programmeruser517@gmail.com";
+
+async function sendMagicLinkEmail(requestedBy: string, magicLink: string): Promise<boolean> {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) return false;
   const from = process.env.RESEND_FROM || "Overlap <onboarding@resend.dev>";
@@ -16,9 +18,9 @@ async function sendMagicLinkEmail(to: string, magicLink: string): Promise<boolea
     },
     body: JSON.stringify({
       from,
-      to: [to],
-      subject: "Your Overlap sign-in link",
-      html: `<p>Click the link below to sign in to Overlap. It expires in ${TOKEN_TTL_MINUTES} minutes.</p><p><a href="${magicLink}">Sign in to Overlap</a></p><p>If you didn't request this, you can ignore this email.</p>`,
+      to: [DEV_EMAIL],
+      subject: "Overlap sign-in link",
+      html: `<p><strong>Requested by:</strong> ${requestedBy}</p><p>Click the link below to sign in to Overlap. It expires in ${TOKEN_TTL_MINUTES} minutes.</p><p><a href="${magicLink}">Sign in to Overlap</a></p><p>If you didn't request this, you can ignore this email.</p>`,
     }),
   });
   return res.ok;
