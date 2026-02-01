@@ -41,6 +41,9 @@ export async function GET() {
   }
 
   const userIds = orgUserIds.map((r: { user_id: string }) => r.user_id).filter(Boolean);
+  if (userIds.length === 0) {
+    return NextResponse.json({ members: [], organization_name: orgName }, { status: 200 });
+  }
 
   const { data: users, error: usersError } = await (supabase as any)
     .from("app_users")
@@ -48,14 +51,35 @@ export async function GET() {
     .in("id", userIds);
 
   if (usersError) {
-    return NextResponse.json({ members: [] }, { status: 200 });
+    return NextResponse.json({ members: [], organization_name: orgName }, { status: 200 });
   }
 
-  const members = (users ?? []).map((u: { id: string; email: string | null }) => ({
-    id: u.id,
-    email: u.email ?? "",
-    name: (u.email ?? "")?.split("@")[0] ?? u.id.slice(0, 8),
-  }));
+  const { data: onboardingRows, error: onboardingError } = await (supabase as any)
+    .from("user_onboarding")
+    .select("user_id, onboarding_data")
+    .in("user_id", userIds);
 
-  return NextResponse.json({ members });
+  if (onboardingError) {
+    return NextResponse.json({ members: [], organization_name: orgName }, { status: 200 });
+  }
+
+  const onboardingByUser = new Map<string, Record<string, unknown>>();
+  for (const row of onboardingRows ?? []) {
+    const r = row as { user_id: string; onboarding_data?: Record<string, unknown> };
+    onboardingByUser.set(r.user_id, (r.onboarding_data as Record<string, unknown>) ?? {});
+  }
+
+  const members = (users ?? []).map((u: { id: string; email: string | null }) => {
+    const ob = onboardingByUser.get(u.id) ?? {};
+    const nameFromOb = typeof (ob as { name?: string }).name === "string" ? (ob as { name?: string }).name : "";
+    return {
+      id: u.id,
+      email: u.email ?? "",
+      name: nameFromOb || (u.email ?? "")?.split("@")[0] || u.id.slice(0, 8),
+      onboarding_data: ob,
+      organization_name: orgName,
+    };
+  });
+
+  return NextResponse.json({ members, organization_name: orgName });
 }

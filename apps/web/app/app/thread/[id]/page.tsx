@@ -31,6 +31,11 @@ export default function ThreadPage() {
   const [buffer, setBuffer] = useState("");
   const [dropdownIndex, setDropdownIndex] = useState(0);
   const [orgMembers, setOrgMembers] = useState<{ id: string; email: string; name: string }[]>([]);
+  const [geminiLastPrompt, setGeminiLastPrompt] = useState<string | null>(null);
+  const [geminiResponse, setGeminiResponse] = useState<string | null>(null);
+  const [geminiResponseExpanded, setGeminiResponseExpanded] = useState(false);
+  const [geminiLoading, setGeminiLoading] = useState(false);
+  const [geminiError, setGeminiError] = useState<string | null>(null);
   const profileRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -106,6 +111,11 @@ export default function ThreadPage() {
       }
       return;
     }
+    if (e.key === "Enter" && !e.shiftKey && !showDropdown) {
+      e.preventDefault();
+      handleSendFromChat();
+      return;
+    }
     if (e.key === "ArrowDown" && showDropdown) {
       e.preventDefault();
       setDropdownIndex((i) => Math.min(i + 1, dropdownOptions.length - 1));
@@ -137,6 +147,75 @@ export default function ThreadPage() {
   };
 
   const inputDisplayValue = (mode === "mention" ? "@" : mode === "task" ? ">" : "") + buffer;
+
+  const REPLY_SUMMARY_LENGTH = 280;
+  const getReplySummary = (text: string): string => {
+    const t = text.trim();
+    if (t.length <= REPLY_SUMMARY_LENGTH) return t;
+    const cut = t.slice(0, REPLY_SUMMARY_LENGTH);
+    const lastSpace = cut.lastIndexOf(" ");
+    return (lastSpace > REPLY_SUMMARY_LENGTH / 2 ? cut.slice(0, lastSpace) : cut).trim() + " …";
+  };
+
+  const CONFLICTS_MARKER = /Conflicts to verify:\s*/i;
+  const parseReplyAndConflicts = (raw: string): { mainBody: string; conflicts: string[] } => {
+    const t = raw.trim();
+    const match = t.match(CONFLICTS_MARKER);
+    if (!match) return { mainBody: t, conflicts: [] };
+    const idx = t.indexOf(match[0]) + match[0].length;
+    const mainBody = t.slice(0, t.indexOf(match[0])).trim();
+    const conflictsBlock = t.slice(idx).trim();
+    const conflicts = conflictsBlock
+      .split(/\n+/)
+      .map((s) => s.replace(/^[\s\-*•]\s*/, "").trim())
+      .filter(Boolean);
+    return { mainBody, conflicts };
+  };
+
+  const getChatPromptText = (): string => {
+    const parts = [
+      ...tokens.map((t) => (t.type === "text" ? t.value : t.type === "mention" ? `@${t.label}` : `>${t.label}`)),
+      buffer.trim() ? (mode === "mention" ? `@${buffer}` : mode === "task" ? `>${buffer}` : buffer) : "",
+    ].filter(Boolean);
+    return parts.join(" ").trim();
+  };
+
+  const sendChatToGemini = async (promptText: string) => {
+    if (!promptText.trim() || geminiLoading) return;
+    setGeminiLoading(true);
+    setGeminiError(null);
+    setGeminiResponse(null);
+    setGeminiLastPrompt(promptText.trim());
+    try {
+      const res = await fetch("/api/gemini", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: promptText.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setGeminiError(data.error ?? "Request failed");
+        return;
+      }
+      setGeminiResponse(data.text ?? "");
+    setGeminiResponseExpanded(false);
+    } catch (e) {
+      setGeminiError(e instanceof Error ? e.message : "Network error");
+    } finally {
+      setGeminiLoading(false);
+    }
+  };
+
+  const handleSendFromChat = () => {
+    const promptText = getChatPromptText();
+    if (!promptText || geminiLoading) return;
+    sendChatToGemini(promptText);
+    setTokens([]);
+    setBuffer("");
+    setMode("text");
+    setDropdownIndex(0);
+    inputRef.current?.focus();
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -230,7 +309,73 @@ export default function ThreadPage() {
             Thread not found. <Link href="/app" className="threadPageLink">Back to app</Link>
           </p>
         )}
-        {!loading && !notFound && <div className="threadPageEmpty" />}
+        {!loading && !notFound && (
+          <div className="threadPageCenterBlock">
+            <div className={`threadPageCenterCard ${geminiLoading ? "threadPageCenterCardLoading" : ""} ${geminiResponse !== null ? "threadPageCenterCardHasOutput" : ""}`}>
+              {geminiLoading && (
+                <div className="threadPageCenterSpinnerWrap" aria-hidden>
+                  <div className="threadPageCenterSpinner" />
+                  <span className="threadPageCenterSpinnerLabel">Gemma 3 12B thinking…</span>
+                </div>
+              )}
+              {!geminiLoading && !geminiLastPrompt && !geminiResponse && (
+                <div className="threadPageCenterDormant">
+                  <p className="threadPageCenterDormantText">Reply from Gemma 3 12B will appear here.</p>
+                  <p className="threadPageCenterDormantHint">Type in the box below and press Send.</p>
+                </div>
+              )}
+              {!geminiLoading && geminiError && (
+                <p className="threadPageCenterError">{geminiError}</p>
+              )}
+              {!geminiLoading && geminiLastPrompt != null && (
+                <div className="threadPageCenterResult">
+                  <div className="threadPageCenterPromptRow">
+                    <span className="threadPageCenterResultLabel">You asked</span>
+                    <p className="threadPageCenterPromptText">{geminiLastPrompt}</p>
+                  </div>
+                  {geminiResponse !== null && (() => {
+                    const { mainBody, conflicts } = parseReplyAndConflicts(geminiResponse || "");
+                    const showExpand = mainBody.length > REPLY_SUMMARY_LENGTH;
+                    return (
+                      <div className="threadPageCenterOutputWrap">
+                        <div className="threadPageCenterReplyHead">
+                          <span className="threadPageCenterResultLabel">Reply</span>
+                          {showExpand && (
+                            <button
+                              type="button"
+                              className="threadPageCenterExpandBtn"
+                              onClick={() => setGeminiResponseExpanded((e) => !e)}
+                              aria-expanded={geminiResponseExpanded}
+                            >
+                              {geminiResponseExpanded ? "Collapse" : "See full"}
+                            </button>
+                          )}
+                        </div>
+                        <div className="threadPageCenterOutputBox">
+                          <pre className="threadPageCenterOutputText">
+                            {geminiResponseExpanded
+                              ? mainBody || "(empty)"
+                              : getReplySummary(mainBody) || "(empty)"}
+                          </pre>
+                        </div>
+                        {conflicts.length > 0 && (
+                          <div className="threadPageCenterConflicts">
+                            <span className="threadPageCenterResultLabel">Conflicts to verify</span>
+                            <ul className="threadPageCenterConflictsList">
+                              {conflicts.map((c, i) => (
+                                <li key={i}>{c}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {!loading && !notFound && (
@@ -289,7 +434,13 @@ export default function ThreadPage() {
                   ))}
                 </div>
               )}
-              <button type="button" className="threadPageChatboxSend" aria-label="Send">
+              <button
+                type="button"
+                className="threadPageChatboxSend"
+                aria-label="Send"
+                onClick={handleSendFromChat}
+                disabled={geminiLoading || !getChatPromptText()}
+              >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="22" y1="2" x2="11" y2="13" />
                   <polygon points="22 2 15 22 11 13 2 9 22 2" />
@@ -432,7 +583,170 @@ const threadPageCss = `
 .threadPageMuted{color:var(--thread-muted);font-size:14px}
 .threadPageLink{color:var(--thread-accent);font-weight:600}
 .threadPageLink:hover{text-decoration:underline}
-.threadPageEmpty{min-height:200px}
+
+.threadPageCenterBlock{
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  min-height:200px;
+  padding:24px 0;
+}
+.threadPageCenterCard{
+  width:100%;
+  max-width:560px;
+  background:rgba(255,255,255,.92);
+  border:1px solid var(--thread-border);
+  border-radius:16px;
+  padding:28px 24px;
+  box-shadow:0 4px 20px rgba(15,23,42,.06);
+  transition:min-height .2s ease, padding .2s ease;
+}
+.threadPageCenterCardLoading{
+  min-height:180px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.threadPageCenterCardHasOutput{
+  min-height:240px;
+}
+
+.threadPageCenterDormant{
+  text-align:center;
+  padding:24px 16px;
+}
+.threadPageCenterDormantText{
+  font-size:15px;
+  color:var(--thread-muted);
+  margin:0 0 6px;
+  font-weight:500;
+}
+.threadPageCenterDormantHint{
+  font-size:13px;
+  color:var(--thread-muted);
+  margin:0;
+  opacity:.85;
+}
+
+.threadPageCenterSpinnerWrap{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:14px;
+}
+.threadPageCenterSpinner{
+  width:44px;
+  height:44px;
+  border:3px solid var(--thread-border);
+  border-top-color:var(--thread-accent);
+  border-radius:50%;
+  animation:threadPageSpin .85s linear infinite;
+}
+.threadPageCenterSpinnerLabel{
+  font-size:13px;
+  color:var(--thread-muted);
+  font-weight:500;
+}
+@keyframes threadPageSpin{
+  to{transform:rotate(360deg)}
+}
+
+.threadPageCenterError{
+  font-size:14px;
+  color:#dc2626;
+  margin:0;
+  padding:12px 0;
+}
+
+.threadPageCenterResult{
+  display:flex;
+  flex-direction:column;
+  gap:20px;
+}
+.threadPageCenterPromptRow{
+  padding-bottom:16px;
+  border-bottom:1px solid var(--thread-border);
+}
+.threadPageCenterResultLabel{
+  display:block;
+  font-size:11px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  color:var(--thread-muted);
+  margin-bottom:8px;
+}
+.threadPageCenterPromptText{
+  font-size:14px;
+  color:var(--thread-text);
+  margin:0;
+  line-height:1.5;
+  white-space:pre-wrap;
+  word-break:break-word;
+}
+.threadPageCenterOutputWrap{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  min-height:120px;
+}
+.threadPageCenterReplyHead{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:8px;
+}
+.threadPageCenterExpandBtn{
+  font-size:12px;
+  font-weight:600;
+  color:var(--thread-accent);
+  background:none;
+  border:none;
+  cursor:pointer;
+  padding:4px 8px;
+  border-radius:6px;
+  font-family:inherit;
+  transition:background .15s ease, color .15s ease;
+}
+.threadPageCenterExpandBtn:hover{
+  background:rgba(37,99,235,.08);
+  color:var(--thread-accent);
+}
+.threadPageCenterOutputBox{
+  flex:1;
+  min-height:140px;
+  max-height:50vh;
+  overflow:auto;
+  background:rgba(15,23,42,.04);
+  border:1px solid var(--thread-border);
+  border-radius:12px;
+  padding:14px 16px;
+}
+.threadPageCenterOutputText{
+  font-size:14px;
+  color:var(--thread-text);
+  white-space:pre-wrap;
+  word-break:break-word;
+  margin:0;
+  font-family:inherit;
+  line-height:1.55;
+}
+.threadPageCenterConflicts{
+  margin-top:16px;
+  padding-top:16px;
+  border-top:1px solid var(--thread-border);
+}
+.threadPageCenterConflictsList{
+  margin:8px 0 0;
+  padding-left:20px;
+  font-size:13px;
+  color:var(--thread-text);
+  line-height:1.5;
+}
+.threadPageCenterConflictsList li{
+  margin-bottom:4px;
+}
 
 .threadPageChatbox{
   position:fixed;
@@ -576,9 +890,13 @@ const threadPageCss = `
   place-items:center;
   transition:transform .15s ease, box-shadow .15s ease;
 }
-.threadPageChatboxSend:hover{
+.threadPageChatboxSend:hover:not(:disabled){
   transform:translateY(-1px);
   box-shadow:0 4px 12px rgba(37,99,235,.25);
+}
+.threadPageChatboxSend:disabled{
+  opacity:.5;
+  cursor:not-allowed;
 }
 .threadPageChatboxLegend{
   margin:8px 0 0;
