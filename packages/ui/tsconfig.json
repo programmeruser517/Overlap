@@ -4,6 +4,8 @@
     "outDir": "dist",
     "rootDir": ".",
     "jsx": "react-jsx",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "composite": true
   },
   "include": ["**/*.ts", "**/*.tsx"],

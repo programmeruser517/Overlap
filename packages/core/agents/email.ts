@@ -3,8 +3,8 @@
  * Initial stub: returns a mock proposal; later will use MailPort / thread context.
  */
 
-import type { Proposal, EmailProposal } from "../domain/models.js";
-import type { Agent, AgentContext, AgentResult } from "./agent.js";
+import type { Proposal, EmailProposal } from "../domain/models";
+import type { Agent, AgentContext, AgentResult } from "./agent";
 
 export function createEmailAgent(_deps: {
   // later: MailPort for thread context, drafts

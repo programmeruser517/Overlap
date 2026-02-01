@@ -32,6 +32,7 @@ export default function ThreadPage() {
   const [dropdownIndex, setDropdownIndex] = useState(0);
   const [orgMembers, setOrgMembers] = useState<{ id: string; email: string; name: string }[]>([]);
   const [geminiLastPrompt, setGeminiLastPrompt] = useState<string | null>(null);
+  const [lastSubmittedTokens, setLastSubmittedTokens] = useState<ChatToken[]>([]);
   const [geminiResponse, setGeminiResponse] = useState<string | null>(null);
   const [geminiResponseExpanded, setGeminiResponseExpanded] = useState(false);
   const [geminiLoading, setGeminiLoading] = useState(false);
@@ -347,6 +348,13 @@ export default function ThreadPage() {
   const handleSendFromChat = () => {
     const promptText = getChatPromptText();
     if (!promptText || geminiLoading) return;
+    const displayTokens: ChatToken[] = [...tokens];
+    if (buffer.trim()) {
+      if (mode === "mention") displayTokens.push({ type: "mention", label: buffer.trim() });
+      else if (mode === "task") displayTokens.push({ type: "task", label: buffer.trim() });
+      else displayTokens.push({ type: "text", value: buffer });
+    }
+    setLastSubmittedTokens(displayTokens);
     sendChatToGemini(promptText);
     setTokens([]);
     setBuffer("");
@@ -532,10 +540,24 @@ export default function ThreadPage() {
       {!loading && !notFound && (
         <div className="threadPageChatbox">
           <div className="threadPageChatboxInner">
-            {geminiLastPrompt && (
+            {lastSubmittedTokens.length > 0 && (
               <div className="threadPageComposedBar" aria-live="polite">
                 <span className="threadPageComposedPrefix">You asked to </span>
-                <span className="threadPageComposedText">{geminiLastPrompt}</span>
+                {lastSubmittedTokens.map((t, i) =>
+                  t.type === "text" ? (
+                    <span key={i} className="threadPageComposedText">{t.value}</span>
+                  ) : t.type === "mention" ? (
+                    <span key={i} className="threadPageChatboxChip threadPageChatboxChipMention threadPageComposedChip">
+                      <span className="threadPageChatboxChipSymbol">@</span>
+                      {t.label}
+                    </span>
+                  ) : (
+                    <span key={i} className="threadPageChatboxChip threadPageChatboxChipTask threadPageComposedChip">
+                      <span className="threadPageChatboxChipSymbol">&gt;</span>
+                      {t.label}
+                    </span>
+                  )
+                )}
               </div>
             )}
             <div className="threadPageChatboxRow">

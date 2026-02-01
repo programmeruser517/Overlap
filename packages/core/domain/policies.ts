@@ -3,7 +3,7 @@
  * without a user-approved proposal.
  */
 
-import type { Thread, Action } from "./models.js";
+import type { Thread, Action } from "./models";
 
 export function canApprove(thread: Thread): boolean {
   return thread.status === "proposed" && thread.proposal != null;

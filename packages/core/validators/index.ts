@@ -3,5 +3,5 @@ export {
   validateScheduleProposal,
   validateEmailProposal,
   assertProposal,
-} from "./proposal.js";
-export { validateAction, assertAction } from "./action.js";
+} from "./proposal";
+export { validateAction, assertAction } from "./action";

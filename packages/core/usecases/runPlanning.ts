@@ -1,8 +1,8 @@
-import type { Thread } from "../domain/models.js";
-import type { DbPort, ClockPort, AuditPort } from "../ports/index.js";
-import type { Agent } from "../agents/agent.js";
-import { NotFoundError } from "../domain/errors.js";
-import { canRunPlanning } from "../domain/policies.js";
+import type { Thread } from "../domain/models";
+import type { DbPort, ClockPort, AuditPort } from "../ports/index";
+import type { Agent } from "../agents/agent";
+import { NotFoundError } from "../domain/errors";
+import { canRunPlanning } from "../domain/policies";
 
 export interface RunPlanningDeps {
   db: DbPort;

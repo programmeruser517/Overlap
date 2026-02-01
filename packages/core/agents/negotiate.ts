@@ -3,8 +3,8 @@
  * Initial stub: returns a mock proposal; later will call CalendarPort and real negotiation.
  */
 
-import type { Proposal, ScheduleProposal } from "../domain/models.js";
-import type { Agent, AgentContext, AgentResult } from "./agent.js";
+import type { Proposal, ScheduleProposal } from "../domain/models";
+import type { Agent, AgentContext, AgentResult } from "./agent";
 
 export function createNegotiateAgent(_deps: {
   // later: CalendarPort, ClockPort for real slots
