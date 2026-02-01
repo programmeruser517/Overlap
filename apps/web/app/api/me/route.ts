@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUserId } from "@/lib/deps";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 export async function GET() {
   try {
@@ -7,8 +8,26 @@ export async function GET() {
     if (!userId) {
       return NextResponse.json({ user: null }, { status: 200 });
     }
+    let displayName: string | null = null;
+    const supabase = getSupabaseAdmin();
+    if (supabase) {
+      const { data: row } = await (supabase as any)
+        .from("user_onboarding")
+        .select("onboarding_data")
+        .eq("user_id", userId)
+        .limit(1)
+        .single();
+      const ob = (row?.onboarding_data as Record<string, unknown> | null) ?? {};
+      displayName =
+        (ob.name as string)?.trim() ||
+        (ob.display_name as string)?.trim() ||
+        null;
+    }
     return NextResponse.json({
-      user: { id: userId, displayName: "Stub User" },
+      user: {
+        id: userId,
+        displayName: displayName ?? "Stub User",
+      },
     });
   } catch (e) {
     console.error(e);

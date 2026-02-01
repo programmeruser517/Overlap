@@ -38,14 +38,30 @@ async function getCustomSession(): Promise<{ user: { id: string; email: string }
   }
 }
 
-/** Session from custom auth (magic-link table) or Supabase Auth. Use getSession() for app auth. */
+/**
+ * Session from custom auth (magic-link) or Supabase Auth.
+ * When using Supabase Auth, we resolve to app_users by email so the app only
+ * treats users in app_users as logged in (e.g. test@overlap.com in auth.users
+ * but not in app_users will get no session).
+ */
 export async function getSession(): Promise<{ user: { id: string; email?: string } } | null> {
   const custom = await getCustomSession();
   if (custom) return custom;
   const supabase = await createClient();
   if (!supabase) return null;
   const { data: { session } } = await supabase.auth.getSession();
-  return session ?? null;
+  if (!session?.user?.email) return null;
+  const { getSupabaseAdmin } = await import("@/lib/supabase/admin");
+  const admin = getSupabaseAdmin();
+  if (!admin) return null;
+  const { data: appUser } = await (admin as any)
+    .from("app_users")
+    .select("id, email")
+    .eq("email", session.user.email)
+    .limit(1)
+    .single();
+  if (!appUser) return null;
+  return { user: { id: appUser.id, email: appUser.email } };
 }
 
 export async function getUserId(): Promise<string | null> {

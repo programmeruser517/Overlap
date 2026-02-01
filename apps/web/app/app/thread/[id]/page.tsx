@@ -38,6 +38,10 @@ export default function ThreadPage() {
   const [geminiError, setGeminiError] = useState<string | null>(null);
   const profileRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const fieldRef = useRef<HTMLDivElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const [focusedTokenIndex, setFocusedTokenIndex] = useState<number | null>(null);
+  const [geminiElapsedSec, setGeminiElapsedSec] = useState(0);
 
   useEffect(() => {
     if (loading || notFound) return;
@@ -51,8 +55,12 @@ export default function ThreadPage() {
     if (mode !== "mention") return [];
     const q = buffer.toLowerCase().trim();
     return orgMembers
-      .filter((m) => m.name.toLowerCase().includes(q) || m.email.toLowerCase().includes(q))
-      .map((m) => m.name)
+      .filter(
+        (m) =>
+          (m.name ?? "").toLowerCase().includes(q) ||
+          (m.email ?? "").toLowerCase().includes(q)
+      )
+      .map((m) => m.name ?? m.email ?? m.id)
       .slice(0, 3);
   }, [mode, buffer, orgMembers]);
 
@@ -79,6 +87,9 @@ export default function ThreadPage() {
   };
 
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const input = e.target as HTMLInputElement;
+    const cursorAtStart = input.selectionStart === 0 && input.selectionEnd === 0;
+
     if (e.key === "@" && mode === "text") {
       e.preventDefault();
       if (buffer) setTokens((prev) => [...prev, { type: "text", value: buffer }]);
@@ -111,7 +122,7 @@ export default function ThreadPage() {
       }
       return;
     }
-    if (e.key === "Enter" && !e.shiftKey && !showDropdown) {
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && !showDropdown) {
       e.preventDefault();
       handleSendFromChat();
       return;
@@ -126,9 +137,116 @@ export default function ThreadPage() {
       setDropdownIndex((i) => Math.max(i - 1, 0));
       return;
     }
-    if (e.key === "Backspace" && !buffer && tokens.length > 0) {
+    if (e.key === "ArrowLeft" && cursorAtStart && tokens.length > 0) {
+      e.preventDefault();
+      const idx = tokens.length - 1;
+      setFocusedTokenIndex(idx);
+      requestAnimationFrame(() => {
+        fieldRef.current?.querySelector<HTMLElement>(`[data-token-index="${idx}"]`)?.focus();
+      });
+      return;
+    }
+    if (e.key === "Backspace" && cursorAtStart && tokens.length > 0) {
       e.preventDefault();
       setTokens((prev) => prev.slice(0, -1));
+      return;
+    }
+    if (e.key === "Delete" && cursorAtStart && tokens.length > 0) {
+      e.preventDefault();
+      setTokens((prev) => prev.slice(0, -1));
+      return;
+    }
+  };
+
+  const tokenToEditableString = (t: ChatToken): string => {
+    if (t.type === "text") return t.value;
+    return t.label;
+  };
+
+  const expandTokenIntoInput = (index: number) => {
+    if (index < 0 || index >= tokens.length) return;
+    const t = tokens[index];
+    const str = tokenToEditableString(t);
+    setTokens((prev) => prev.filter((_, i) => i !== index));
+    if (t.type === "mention") {
+      setMode("mention");
+      setBuffer(str + buffer);
+    } else if (t.type === "task") {
+      setMode("task");
+      setBuffer(str + buffer);
+    } else {
+      setMode("text");
+      setBuffer(str + buffer);
+    }
+    setFocusedTokenIndex(null);
+    setDropdownIndex(0);
+    requestAnimationFrame(() => {
+      const el = inputRef.current;
+      if (!el) return;
+      el.focus();
+      const prefixLen = t.type === "mention" || t.type === "task" ? 1 : 0;
+      el.setSelectionRange(prefixLen, prefixLen);
+    });
+  };
+
+  const handleTokenKeyDown = (e: React.KeyboardEvent, index: number) => {
+    if (e.key === "ArrowRight") {
+      e.preventDefault();
+      if (index + 1 < tokens.length) {
+        setFocusedTokenIndex(index + 1);
+        requestAnimationFrame(() => {
+          fieldRef.current?.querySelector<HTMLElement>(`[data-token-index="${index + 1}"]`)?.focus();
+        });
+      } else {
+        setFocusedTokenIndex(null);
+        inputRef.current?.focus();
+      }
+      return;
+    }
+    if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      if (index > 0) {
+        setFocusedTokenIndex(index - 1);
+        requestAnimationFrame(() => {
+          fieldRef.current?.querySelector<HTMLElement>(`[data-token-index="${index - 1}"]`)?.focus();
+        });
+      } else {
+        setFocusedTokenIndex(null);
+        inputRef.current?.focus();
+      }
+      return;
+    }
+    if (e.key === "Backspace") {
+      e.preventDefault();
+      setTokens((prev) => prev.filter((_, i) => i !== index));
+      if (index > 0) {
+        setFocusedTokenIndex(index - 1);
+        requestAnimationFrame(() => {
+          fieldRef.current?.querySelector<HTMLElement>(`[data-token-index="${index - 1}"]`)?.focus();
+        });
+      } else {
+        setFocusedTokenIndex(null);
+        inputRef.current?.focus();
+      }
+      return;
+    }
+    if (e.key === "Delete") {
+      e.preventDefault();
+      setTokens((prev) => prev.filter((_, i) => i !== index));
+      if (index < tokens.length - 1) {
+        setFocusedTokenIndex(index);
+        requestAnimationFrame(() => {
+          fieldRef.current?.querySelector<HTMLElement>(`[data-token-index="${index}"]`)?.focus();
+        });
+      } else {
+        setFocusedTokenIndex(null);
+        inputRef.current?.focus();
+      }
+      return;
+    }
+    if (e.key === "Enter" || e.key.length === 1 || e.key === " ") {
+      e.preventDefault();
+      expandTokenIntoInput(index);
     }
   };
 
@@ -182,7 +300,11 @@ export default function ThreadPage() {
 
   const sendChatToGemini = async (promptText: string) => {
     if (!promptText.trim() || geminiLoading) return;
+    abortControllerRef.current?.abort();
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
     setGeminiLoading(true);
+    setGeminiElapsedSec(0);
     setGeminiError(null);
     setGeminiResponse(null);
     setGeminiLastPrompt(promptText.trim());
@@ -191,6 +313,7 @@ export default function ThreadPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: promptText.trim() }),
+        signal: controller.signal,
       });
       const data = await res.json();
       if (!res.ok) {
@@ -198,13 +321,28 @@ export default function ThreadPage() {
         return;
       }
       setGeminiResponse(data.text ?? "");
-    setGeminiResponseExpanded(false);
+      setGeminiResponseExpanded(false);
     } catch (e) {
-      setGeminiError(e instanceof Error ? e.message : "Network error");
+      if ((e as Error).name === "AbortError") {
+        setGeminiError("Stopped");
+      } else {
+        setGeminiError(e instanceof Error ? e.message : "Network error");
+      }
     } finally {
       setGeminiLoading(false);
+      abortControllerRef.current = null;
     }
   };
+
+  const handleStopGemini = () => {
+    abortControllerRef.current?.abort();
+  };
+
+  useEffect(() => {
+    if (!geminiLoading) return;
+    const t = setInterval(() => setGeminiElapsedSec((s) => s + 1), 1000);
+    return () => clearInterval(t);
+  }, [geminiLoading]);
 
   const handleSendFromChat = () => {
     const promptText = getChatPromptText();
@@ -309,6 +447,31 @@ export default function ThreadPage() {
             Thread not found. <Link href="/app" className="threadPageLink">Back to app</Link>
           </p>
         )}
+        {!loading && !notFound && geminiLastPrompt && (
+          <div className="threadPageCenterHeader">
+            <div className="threadPageCenterHeaderInner">
+              <span className="threadPageCenterHeaderLabel">You asked</span>
+              <p className="threadPageCenterHeaderPrompt">{geminiLastPrompt}</p>
+              <div className="threadPageCenterHeaderMeta">
+                {geminiLoading && (
+                  <>
+                    <span className="threadPageCenterHeaderTimer">
+                      Est. ~30s · {Math.floor(geminiElapsedSec / 60)}:{String(geminiElapsedSec % 60).padStart(2, "0")}
+                    </span>
+                    <button
+                      type="button"
+                      className="threadPageCenterHeaderStop"
+                      onClick={handleStopGemini}
+                      aria-label="Stop"
+                    >
+                      Stop
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
         {!loading && !notFound && (
           <div className="threadPageCenterBlock">
             <div className={`threadPageCenterCard ${geminiLoading ? "threadPageCenterCardLoading" : ""} ${geminiResponse !== null ? "threadPageCenterCardHasOutput" : ""}`}>
@@ -329,10 +492,6 @@ export default function ThreadPage() {
               )}
               {!geminiLoading && geminiLastPrompt != null && (
                 <div className="threadPageCenterResult">
-                  <div className="threadPageCenterPromptRow">
-                    <span className="threadPageCenterResultLabel">You asked</span>
-                    <p className="threadPageCenterPromptText">{geminiLastPrompt}</p>
-                  </div>
                   {geminiResponse !== null && (() => {
                     const { mainBody, conflicts } = parseReplyAndConflicts(geminiResponse || "");
                     const showExpand = mainBody.length > REPLY_SUMMARY_LENGTH;
@@ -382,22 +541,39 @@ export default function ThreadPage() {
         <div className="threadPageChatbox">
           <div className="threadPageChatboxInner">
             <div className="threadPageChatboxRow">
-              <div className="threadPageChatboxField">
-                {tokens.map((t, i) =>
-                  t.type === "text" ? (
-                    <span key={i} className="threadPageChatboxText">{t.value}</span>
+              <div
+                ref={fieldRef}
+                className="threadPageChatboxField"
+                onClick={(e) => {
+                  if ((e.target as HTMLElement).closest("[data-token-index]") == null) inputRef.current?.focus();
+                }}
+              >
+                {tokens.map((t, i) => {
+                  const common = {
+                    key: i,
+                    "data-token-index": i,
+                    tabIndex: 0,
+                    role: "button" as const,
+                    onFocus: () => setFocusedTokenIndex(i),
+                    onKeyDown: (ev: React.KeyboardEvent) => handleTokenKeyDown(ev, i),
+                    className: "threadPageChatboxTokenFocusable",
+                  };
+                  return t.type === "text" ? (
+                    <span {...common} className="threadPageChatboxText threadPageChatboxTokenFocusable">
+                      {t.value}
+                    </span>
                   ) : t.type === "mention" ? (
-                    <span key={i} className="threadPageChatboxChip threadPageChatboxChipMention">
+                    <span {...common} className="threadPageChatboxChip threadPageChatboxChipMention threadPageChatboxTokenFocusable">
                       <span className="threadPageChatboxChipSymbol">@</span>
                       {t.label}
                     </span>
                   ) : (
-                    <span key={i} className="threadPageChatboxChip threadPageChatboxChipTask">
+                    <span {...common} className="threadPageChatboxChip threadPageChatboxChipTask threadPageChatboxTokenFocusable">
                       <span className="threadPageChatboxChipSymbol">&gt;</span>
                       {t.label}
                     </span>
-                  )
-                )}
+                  );
+                })}
                 <input
                   ref={inputRef}
                   type="text"
@@ -406,6 +582,7 @@ export default function ThreadPage() {
                   value={inputDisplayValue}
                   onChange={handleInputChange}
                   onKeyDown={handleInputKeyDown}
+                  onFocus={() => setFocusedTokenIndex(null)}
                   aria-label="Chat input"
                   autoComplete="off"
                 />
@@ -437,13 +614,17 @@ export default function ThreadPage() {
               <button
                 type="button"
                 className="threadPageChatboxSend"
-                aria-label="Send"
+                aria-label="Plan / Send"
                 onClick={handleSendFromChat}
                 disabled={geminiLoading || !getChatPromptText()}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="22" y1="2" x2="11" y2="13" />
-                  <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                  <line x1="7" y1="14" x2="17" y2="14" />
+                  <line x1="7" y1="18" x2="13" y2="18" />
                 </svg>
               </button>
             </div>
@@ -451,6 +632,7 @@ export default function ThreadPage() {
               <span><strong>@</strong> people in your organization</span>
               <span><strong>{">"}</strong> task</span>
               <span>ESC to finish</span>
+              <span><strong>Ctrl+Enter</strong> or <strong>⌘+Enter</strong> to send</span>
             </p>
           </div>
         </div>
@@ -583,6 +765,59 @@ const threadPageCss = `
 .threadPageMuted{color:var(--thread-muted);font-size:14px}
 .threadPageLink{color:var(--thread-accent);font-weight:600}
 .threadPageLink:hover{text-decoration:underline}
+
+.threadPageCenterHeader{
+  max-width:1100px;
+  margin:0 auto;
+  padding:0 20px 16px;
+  border-bottom:1px solid var(--thread-border);
+}
+.threadPageCenterHeaderInner{
+  max-width:560px;
+  margin:0 auto;
+}
+.threadPageCenterHeaderLabel{
+  display:block;
+  font-size:11px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  color:var(--thread-muted);
+  margin-bottom:6px;
+}
+.threadPageCenterHeaderPrompt{
+  font-size:15px;
+  font-weight:600;
+  color:var(--thread-text);
+  margin:0 0 10px;
+  line-height:1.4;
+}
+.threadPageCenterHeaderMeta{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.threadPageCenterHeaderTimer{
+  font-size:13px;
+  color:var(--thread-muted);
+  font-weight:500;
+}
+.threadPageCenterHeaderStop{
+  font-size:12px;
+  font-weight:600;
+  color:#dc2626;
+  background:none;
+  border:1px solid rgba(220,38,38,.4);
+  border-radius:8px;
+  padding:4px 10px;
+  cursor:pointer;
+  font-family:inherit;
+  transition:background .15s ease, color .15s ease;
+}
+.threadPageCenterHeaderStop:hover{
+  background:rgba(220,38,38,.08);
+}
 
 .threadPageCenterBlock{
   display:flex;
@@ -789,6 +1024,15 @@ const threadPageCss = `
   color:var(--thread-text);
   white-space:pre-wrap;
   word-break:break-word;
+}
+.threadPageChatboxTokenFocusable{
+  cursor:text;
+  outline:none;
+  border-radius:4px;
+}
+.threadPageChatboxTokenFocusable:focus{
+  outline:2px solid var(--thread-accent);
+  outline-offset:2px;
 }
 .threadPageChatboxChip{
   display:inline-flex;
