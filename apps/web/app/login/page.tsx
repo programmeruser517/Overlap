@@ -3,10 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { signInWithPassword, signInWithOtp } from "@/lib/supabase/client";
+import { signInWithPassword, signUpWithPassword } from "@/lib/supabase/client";
 
 export default function LoginPage() {
-  const [mode, setMode] = useState<"password" | "magic">("password");
+  const [intent, setIntent] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<"magic" | "password">("magic");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -19,26 +20,41 @@ export default function LoginPage() {
     try {
       if (mode === "password") {
         if (!password.trim()) {
-          setMessage({ type: "err", text: "Enter your password." });
+          setMessage({ type: "err", text: intent === "signup" ? "Choose a password." : "Enter your password." });
           setLoading(false);
           return;
         }
-        const { error } = await signInWithPassword(email.trim(), password);
-        if (error) {
-          setMessage({ type: "err", text: error.message });
-          setLoading(false);
+        if (intent === "signup") {
+          const { error } = await signUpWithPassword(email.trim(), password);
+          if (error) {
+            setMessage({ type: "err", text: error.message });
+            setLoading(false);
+            return;
+          }
+          setMessage({ type: "ok", text: "Check your email to confirm your account." });
+        } else {
+          const { error } = await signInWithPassword(email.trim(), password);
+          if (error) {
+            setMessage({ type: "err", text: error.message });
+            setLoading(false);
+            return;
+          }
+          window.location.href = "/app";
           return;
         }
-        window.location.href = "/app";
-        return;
+      } else {
+        const res = await fetch("/api/auth/magic-link", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: email.trim() }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          setMessage({ type: "err", text: data.error ?? "Something went wrong." });
+          return;
+        }
+        setMessage({ type: "ok", text: data.message ?? "Check your email for the sign-in link." });
       }
-      const { error } = await signInWithOtp(email.trim());
-      if (error) {
-        setMessage({ type: "err", text: error.message });
-        setLoading(false);
-        return;
-      }
-      setMessage({ type: "ok", text: "Check your email for the sign-in link." });
     } catch (err) {
       setMessage({ type: "err", text: err instanceof Error ? err.message : "Something went wrong." });
     } finally {
@@ -66,67 +82,113 @@ export default function LoginPage() {
               </div>
             </Link>
             <nav className="nav">
-              <Link className="navLink" href="/">
-                Home
+              <Link className="navLink" href="/#how">
+                How it works
+              </Link>
+              <Link className="navLink" href="/#flows">
+                Flows
               </Link>
             </nav>
           </div>
         </header>
 
         <section className="loginSection">
-          <div className="container">
+          <div className="container loginGrid">
             <div className="loginCard">
-              <div className="loginCardTop">
-                <h1 className="loginTitle">Sign in</h1>
-                <p className="loginSub">Use your email and password, or get a magic link.</p>
-              </div>
-              <form onSubmit={handleSubmit} className="loginForm">
-                <label className="loginLabel">
-                  Email
-                  <input
-                    type="email"
-                    className="loginInput"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    required
-                    autoComplete="email"
-                  />
-                </label>
-                {mode === "password" && (
+                <div className="loginCardTop">
+                  <h1 className="loginTitle">{intent === "signup" ? "Sign up" : "Sign in"}</h1>
+                  <p className="loginSub">
+                    {intent === "signup"
+                      ? "Enter your email and we’ll send you a magic link to create your account."
+                      : "Enter your email and we’ll send you a magic link to sign in."}
+                  </p>
+                </div>
+                <form onSubmit={handleSubmit} className="loginForm">
                   <label className="loginLabel">
-                    Password
+                    Email
                     <input
-                      type="password"
+                      type="email"
                       className="loginInput"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                      autoComplete="current-password"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@example.com"
+                      required
+                      autoComplete="email"
                     />
                   </label>
-                )}
-                {message && (
-                  <div className={message.type === "ok" ? "loginMessage ok" : "loginMessage err"}>
-                    {message.text}
+                  {mode === "password" && (
+                    <label className="loginLabel">
+                      Password
+                      <input
+                        type="password"
+                        className="loginInput"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder={intent === "signup" ? "At least 8 characters" : "••••••••"}
+                        minLength={intent === "signup" ? 8 : undefined}
+                        autoComplete={intent === "signup" ? "new-password" : "current-password"}
+                      />
+                    </label>
+                  )}
+                  {message && (
+                    <div className={message.type === "ok" ? "loginMessage ok" : "loginMessage err"}>
+                      {message.text}
+                    </div>
+                  )}
+                  <div className="loginActions">
+                    <button type="submit" className="btn btnPrimary btnLarge" disabled={loading}>
+                      {loading
+                        ? "…"
+                        : mode === "magic"
+                          ? "Send magic link"
+                          : intent === "signup"
+                            ? "Create account"
+                            : "Sign in"}
+                    </button>
+                    <p className="loginSwitch">
+                      <button
+                        type="button"
+                        className="loginPasswordToggle"
+                        onClick={() => {
+                          setMode(mode === "magic" ? "password" : "magic");
+                          setMessage(null);
+                          setPassword("");
+                        }}
+                      >
+                        {mode === "magic" ? "Sign in with password" : "Use magic link instead"}
+                      </button>
+                    </p>
+                    <p className="loginSwitch">
+                      {intent === "signup" ? (
+                        <>Already have an account?{" "}
+                          <button
+                            type="button"
+                            className="btn btnGhost btnSmall"
+                            onClick={() => {
+                              setIntent("signin");
+                              setMessage(null);
+                            }}
+                          >
+                            Sign in
+                          </button>
+                        </>
+                      ) : (
+                        <>Don&apos;t have an account?{" "}
+                          <button
+                            type="button"
+                            className="btn btnGhost btnSmall"
+                            onClick={() => {
+                              setIntent("signup");
+                              setMessage(null);
+                            }}
+                          >
+                            Sign up
+                          </button>
+                        </>
+                      )}
+                    </p>
                   </div>
-                )}
-                <div className="loginActions">
-                  <button type="submit" className="btn btnPrimary btnLarge" disabled={loading}>
-                    {loading ? "…" : mode === "password" ? "Sign in" : "Send magic link"}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btnGhost btnLarge"
-                    onClick={() => {
-                      setMode(mode === "password" ? "magic" : "password");
-                      setMessage(null);
-                    }}
-                  >
-                    {mode === "password" ? "Use magic link instead" : "Use password instead"}
-                  </button>
-                </div>
-              </form>
+                </form>
             </div>
           </div>
         </section>
@@ -152,20 +214,35 @@ const loginCss = `
 }
 *{box-sizing:border-box}
 html,body{height:100%;margin:0;color:var(--text);
-  background:
-    radial-gradient(1200px 500px at 15% 0%, rgba(37,99,235,.10), transparent 60%),
-    radial-gradient(1000px 520px at 90% 10%, rgba(124,58,237,.10), transparent 55%),
-    linear-gradient(180deg, #ffffff, var(--bg));
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
   -webkit-font-smoothing:antialiased;
 }
 a{color:inherit;text-decoration:none}
-.loginWrap{min-height:100vh}
+.loginWrap{
+  min-height:100vh;
+  background:var(--bg);
+  background-image:
+    radial-gradient(ellipse 140% 80% at 10% -20%, rgba(37,99,235,.18), transparent 50%),
+    radial-gradient(ellipse 120% 70% at 95% 0%, rgba(124,58,237,.14), transparent 45%),
+    radial-gradient(ellipse 80% 50% at 50% 110%, rgba(37,99,235,.06), transparent 40%),
+    linear-gradient(180deg, #ffffff 0%, #f8f9fc 45%, var(--bg) 100%);
+  position:relative;
+}
+.loginWrap::before{
+  content:"";
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(15,23,42,.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15,23,42,.02) 1px, transparent 1px);
+  background-size:48px 48px;
+}
+.loginWrap > *{position:relative;z-index:1}
 .container{max-width:1100px;margin:0 auto;padding:0 20px}
 .topbar{
   position:sticky;top:0;z-index:50;
   background:rgba(255,255,255,.75);
   backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
   border-bottom:1px solid var(--border);
 }
 .topbarInner{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 0}
@@ -173,9 +250,13 @@ a{color:inherit;text-decoration:none}
 .logoWrap{flex-shrink:0;width:88px;height:88px;display:block;line-height:0}
 .logoWrap img{width:100%;height:100%;object-fit:contain;display:block;vertical-align:middle}
 .brandSub{font-size:14px;color:var(--muted);font-weight:500}
-.nav{display:flex;align-items:center;gap:10px}
-.navLink{font-size:14px;color:var(--muted);padding:10px;border-radius:10px;transition:background .15s ease,color .15s ease}
-.navLink:hover{background:rgba(15,23,42,.05);color:var(--text)}
+.nav{display:flex;align-items:center;gap:6px}
+.navLink{
+  font-size:14px;font-weight:600;color:var(--muted);
+  padding:10px 14px;border-radius:10px;
+  transition:background .15s ease,color .15s ease;
+}
+.navLink:hover{background:rgba(15,23,42,.06);color:var(--text)}
 .btn{
   border:1px solid var(--border);
   background:#fff;
@@ -194,10 +275,11 @@ a{color:inherit;text-decoration:none}
 .btnPrimary:hover{border-color:rgba(37,99,235,.35)}
 .btnGhost{background:rgba(255,255,255,.65)}
 .btnLarge{padding:12px 16px;border-radius:14px}
+.btnSmall{padding:6px 10px;font-size:13px}
 .btn:disabled{opacity:.7;cursor:not-allowed;transform:none}
-.loginSection{padding:48px 0}
+.loginSection{padding:48px 0 64px}
+.loginGrid{max-width:420px;margin:0 auto}
 .loginCard{
-  max-width:420px;margin:0 auto;
   background:rgba(255,255,255,.82);
   border:1px solid var(--border);
   border-radius:18px;
@@ -225,4 +307,13 @@ a{color:inherit;text-decoration:none}
 .loginMessage.ok{background:rgba(22,163,74,.1);border:1px solid rgba(22,163,74,.25);color:#0f5132}
 .loginMessage.err{background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.2);color:#991b1b}
 .loginActions{display:flex;flex-direction:column;gap:10px;margin-top:20px}
+.loginSwitch{margin:0;font-size:14px;color:var(--muted)}
+.loginPasswordToggle{background:none;border:none;padding:0;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;text-decoration:underline}
+.loginPasswordToggle:hover{color:var(--accent)}
+.loginMagicLinkBox{margin:16px 0;padding:16px;background:rgba(22,163,74,.08);border:1px solid rgba(22,163,74,.25);border-radius:12px}
+.loginMagicLinkButton{display:block;width:100%;padding:14px 16px;text-align:center;font-size:15px;font-weight:700;color:#fff;background:var(--accent);border-radius:12px;text-decoration:none;box-shadow:0 2px 8px rgba(37,99,235,.25);transition:transform .15s,box-shadow .15s}
+.loginMagicLinkButton:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(37,99,235,.35)}
+.loginMagicLinkNote{margin:10px 0 0;font-size:13px;color:var(--muted);text-align:center}
+.loginLink{color:var(--accent);text-decoration:underline;cursor:pointer;font-weight:600}
+.loginLink:hover{color:var(--accent2)}
 `;

@@ -18,6 +18,13 @@ export async function signInWithPassword(email: string, password: string) {
   return { error };
 }
 
+export async function signUpWithPassword(email: string, password: string) {
+  const supabase = getSupabase();
+  if (!supabase) return { error: { message: NOT_CONFIGURED.message } as Error };
+  const { error } = await supabase.auth.signUp({ email, password });
+  return { error };
+}
+
 export async function signInWithOtp(email: string) {
   const supabase = getSupabase();
   if (!supabase) return { error: { message: NOT_CONFIGURED.message } as Error };

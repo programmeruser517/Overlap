@@ -2,19 +2,13 @@
   "name": "desktop",
   "version": "0.1.0",
   "private": true,
-  "description": "Native desktop app (Tauri/Electron shell)",
+  "description": "Native desktop app (Tauri shell wrapping web app)",
   "scripts": {
-    "dev": "echo 'Desktop app: add Tauri or Electron later'",
-    "build": "echo 'Desktop app: add Tauri or Electron later'",
-    "typecheck": "tsc --noEmit"
-  },
-  "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build"
   },
   "devDependencies": {
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0",
-    "typescript": "^5.3.0"
+    "@tauri-apps/cli": "^2.0.0"
   }
 }

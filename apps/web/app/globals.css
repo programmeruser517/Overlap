@@ -28,3 +28,41 @@ a {
 a:hover {
   color: var(--accent-hover);
 }
+
+/* App shell: nav + padded content */
+.appShell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.appNav {
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.appNavInner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0.75rem 1rem;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.appNavLink {
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  font-weight: 500;
+  color: var(--text);
+}
+.appNavLink:hover {
+  background: var(--border);
+  color: var(--text);
+}
+
+.appViewer {
+  flex: 1;
+  padding: 1.25rem 1rem;
+}
