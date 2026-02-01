@@ -739,6 +739,14 @@ export default function ThreadPage() {
         }
         setThreadMissing(false);
         setNotFound(false);
+        if (view === "graph" && thread.viewMode !== "graph") {
+          fetch(`/api/thread/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ viewMode: "graph" }),
+          }).catch(() => {});
+        }
         setOrchestrateThread({ id: thread.id, status: thread.status });
         setOrchestrateProposal(thread.proposal ?? null);
         setParticipantsSummary(
@@ -779,7 +787,7 @@ export default function ThreadPage() {
         }
       })
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, view]);
 
   useLayoutEffect(() => {
     if (!showDoneView || !centerBlockRef.current || !statusCardRef.current) {

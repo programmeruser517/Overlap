@@ -19,6 +19,9 @@ export interface Participant {
   displayName?: string;
 }
 
+/** View mode for the thread UI: linear (chatbot + Gemini) or graph (analyzer + OpenRouter). */
+export type ThreadViewMode = "linear" | "graph";
+
 export interface Thread {
   id: string;
   ownerId: string;
@@ -32,6 +35,8 @@ export interface Thread {
   proposal?: Proposal;
   /** When we actually executed (email sent / event created). */
   executedAt?: string;
+  /** UI view this thread was created in; used so previous threads open in the same view. */
+  viewMode?: ThreadViewMode;
   createdAt: string;
   updatedAt: string;
 }

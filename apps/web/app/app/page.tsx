@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
 import LoadingScreen from "@/components/LoadingScreen";
 
@@ -13,7 +13,7 @@ export default function AppHome() {
   const [getToMain, setGetToMain] = useState<boolean | null>(null);
   const [saving, setSaving] = useState(false);
   const [creatingThread, setCreatingThread] = useState(false);
-  const [threads, setThreads] = useState<Array<{ id: string; prompt?: string; status?: string; proposal?: { summary?: string }; createdAt?: string; updatedAt?: string }>>([]);
+  const [threads, setThreads] = useState<Array<{ id: string; prompt?: string; status?: string; proposal?: { summary?: string }; createdAt?: string; updatedAt?: string; viewMode?: "linear" | "graph" }>>([]);
   const [viewMode, setViewMode] = useState<"linear" | "graph">("linear");
   const profileRef = useRef<HTMLDivElement>(null);
   const [formData, setFormData] = useState({
@@ -26,9 +26,19 @@ export default function AppHome() {
     buffer: "No buffer"
   });
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
 
   useEffect(() => {
-    fetch("/api/onboarding")
+    const v = searchParams.get("view");
+    if (v === "linear" || v === "graph") setViewMode(v);
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (pathname !== "/app") return;
+    setGetToMain(null);
+    router.refresh();
+    fetch("/api/onboarding", { cache: "no-store", credentials: "include" })
       .then((r) => r.json())
       .then((d) => {
         setGetToMain(d.get_to_main === true);
@@ -37,7 +47,7 @@ export default function AppHome() {
         }
       })
       .catch(() => setGetToMain(false));
-  }, []);
+  }, [pathname, router]);
 
   useEffect(() => {
     if (getToMain === false) {
@@ -46,12 +56,37 @@ export default function AppHome() {
   }, [getToMain, router]);
 
   useEffect(() => {
-    if (getToMain !== true) return;
-    fetch("/api/thread")
+    if (getToMain !== true || pathname !== "/app") return;
+    fetch("/api/thread", { credentials: "include", cache: "no-store" })
       .then((r) => r.json())
-      .then((d) => setThreads(Array.isArray(d?.threads) ? d.threads : []))
+      .then((d) => {
+        const list = Array.isArray(d?.threads) ? d.threads : [];
+        setThreads(list.map((t: { id: string; viewMode?: string; [k: string]: unknown }) => ({
+          ...t,
+          viewMode: t.viewMode === "linear" || t.viewMode === "graph" ? t.viewMode : undefined,
+        })));
+      })
       .catch(() => setThreads([]));
-  }, [getToMain]);
+  }, [getToMain, pathname]);
+
+  useEffect(() => {
+    if (getToMain !== true || pathname !== "/app") return;
+    const onVisible = () => {
+      if (document.visibilityState !== "visible") return;
+      fetch("/api/thread", { credentials: "include", cache: "no-store" })
+        .then((r) => r.json())
+        .then((d) => {
+          const list = Array.isArray(d?.threads) ? d.threads : [];
+          setThreads(list.map((t: { id: string; viewMode?: string; [k: string]: unknown }) => ({
+            ...t,
+            viewMode: t.viewMode === "linear" || t.viewMode === "graph" ? t.viewMode : undefined,
+          })));
+        })
+        .catch(() => {});
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [getToMain, pathname]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -140,7 +175,7 @@ export default function AppHome() {
       const res = await fetch("/api/thread", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kind: "schedule", prompt: "", participants: [] }),
+        body: JSON.stringify({ kind: "schedule", prompt: "", participants: [], viewMode }),
       });
       const data = await res.json().catch(() => ({}));
       if (data?.thread?.id) {
@@ -381,13 +416,13 @@ export default function AppHome() {
                     return (
                       <tr key={t.id}>
                         <td>
-                          <Link href={`/app/thread/${t.id}`} className="threadRowLink">
+                          <Link href={`/app/thread/${t.id}?view=${t.viewMode ?? viewMode}`} className="threadRowLink">
                             {title}
                           </Link>
                         </td>
                         <td style={{ color: "var(--muted)" }}>{displayDate}</td>
                         <td style={{ textAlign: "right" }}>
-                          <Link href={`/app/thread/${t.id}`} className="threadRowLink">
+                          <Link href={`/app/thread/${t.id}?view=${t.viewMode ?? viewMode}`} className="threadRowLink">
                             View
                           </Link>
                         </td>

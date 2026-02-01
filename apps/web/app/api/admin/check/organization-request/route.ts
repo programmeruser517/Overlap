@@ -18,9 +18,18 @@ export async function GET() {
 
   const { data, error } = await (supabase as any)
     .from("organization_requests")
-    .select("id, user_id, organization_name, status, created_at")
-    .order("created_at", { ascending: true });
+    .select("id, user_id, organization_name, status, created_at");
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ requests: data ?? [] });
+
+  const list = (data ?? []) as Array<{ id: string; user_id: string; organization_name: string; status: string; created_at: string }>;
+  list.sort((a, b) => {
+    const aPending = a.status === "pending";
+    const bPending = b.status === "pending";
+    if (aPending && !bPending) return -1;
+    if (!aPending && bPending) return 1;
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
+
+  return NextResponse.json({ requests: list });
 }

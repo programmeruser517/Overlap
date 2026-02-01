@@ -8,7 +8,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     const body = await request.json();
-    const { kind, prompt, participants } = body;
+    const { kind, prompt, participants, viewMode } = body;
     if (!kind) {
       return NextResponse.json(
         { error: "kind required" },
@@ -16,10 +16,12 @@ export async function POST(request: Request) {
       );
     }
     const promptStr = typeof prompt === "string" ? prompt : "";
+    const view = viewMode === "linear" || viewMode === "graph" ? viewMode : undefined;
     const thread = await threadApi.create(
       kind,
       promptStr,
-      Array.isArray(participants) ? participants : []
+      Array.isArray(participants) ? participants : [],
+      view
     );
     return NextResponse.json({ thread });
   } catch (e) {

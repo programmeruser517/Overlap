@@ -16,12 +16,14 @@ type Row = {
   participants: unknown;
   proposal: unknown;
   executed_at: string | null;
+  view_mode: string | null;
   created_at: string;
   updated_at: string;
 };
 
 function rowToThread(row: Row): Thread {
   const participants = (row.participants as Participant[]) ?? [];
+  const viewMode = row.view_mode === "linear" || row.view_mode === "graph" ? row.view_mode : undefined;
   return {
     id: row.id,
     ownerId: row.owner_id,
@@ -37,6 +39,7 @@ function rowToThread(row: Row): Thread {
       : [],
     proposal: row.proposal as Proposal | undefined,
     executedAt: row.executed_at ?? undefined,
+    viewMode,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -50,6 +53,7 @@ export function createSupabaseThreadDb(): DbPort | null {
     async createThread(thread): Promise<Thread> {
       const id = `thread_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
       const now = thread.createdAt ?? new Date().toISOString();
+      const viewMode = thread.viewMode === "linear" || thread.viewMode === "graph" ? thread.viewMode : null;
       const row = {
         id,
         owner_id: thread.ownerId,
@@ -59,6 +63,7 @@ export function createSupabaseThreadDb(): DbPort | null {
         participants: thread.participants,
         proposal: thread.proposal ?? null,
         executed_at: thread.executedAt ?? null,
+        view_mode: viewMode,
         created_at: now,
         updated_at: thread.updatedAt ?? now,
       };
@@ -90,6 +95,7 @@ export function createSupabaseThreadDb(): DbPort | null {
       if (patch.participants != null) patchRow.participants = patch.participants;
       if (patch.proposal !== undefined) patchRow.proposal = patch.proposal ?? null;
       if (patch.executedAt !== undefined) patchRow.executed_at = patch.executedAt ?? null;
+      if (patch.viewMode !== undefined) patchRow.view_mode = patch.viewMode === "linear" || patch.viewMode === "graph" ? patch.viewMode : null;
       const { data, error } = await (supabase as any)
         .from("threads")
         .update(patchRow)

@@ -11,12 +11,24 @@ CREATE TABLE IF NOT EXISTS threads (
   participants JSONB NOT NULL DEFAULT '[]',
   proposal JSONB,
   executed_at TIMESTAMPTZ,
+  view_mode TEXT CHECK (view_mode IS NULL OR view_mode IN ('linear', 'graph')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_threads_owner ON threads(owner_id);
 CREATE INDEX IF NOT EXISTS idx_threads_status ON threads(status);
+
+-- Add view_mode for existing DBs (no-op if column already exists)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'threads' AND column_name = 'view_mode'
+  ) THEN
+    ALTER TABLE threads ADD COLUMN view_mode TEXT CHECK (view_mode IS NULL OR view_mode IN ('linear', 'graph'));
+  END IF;
+END $$;
 
 -- Audit log (optional; can use Supabase audit or custom table)
 CREATE TABLE IF NOT EXISTS audit_log (

@@ -81,3 +81,50 @@ export async function GET(
     );
   }
 }
+
+const ALLOWED_STATUSES = ["draft", "planning", "proposed", "approved", "done", "cancelled"] as const;
+
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const userId = await getCurrentUserId();
+    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const thread = await threadApi.get(id);
+    if (!thread) return NextResponse.json({ error: "Thread not found" }, { status: 404 });
+    const ownerId = String(thread.ownerId ?? "").toLowerCase();
+    const uid = String(userId).toLowerCase();
+    if (ownerId !== uid) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+    let body: { status?: string; proposal?: { summary?: string }; viewMode?: string };
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    }
+
+    const patch: { status?: typeof thread.status; proposal?: typeof thread.proposal; viewMode?: "linear" | "graph" } = {};
+    if (body.status != null) {
+      if (!ALLOWED_STATUSES.includes(body.status as any)) {
+        return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+      }
+      patch.status = body.status as typeof thread.status;
+    }
+    if (body.proposal !== undefined) patch.proposal = body.proposal ?? undefined;
+    if (body.viewMode === "linear" || body.viewMode === "graph") patch.viewMode = body.viewMode;
+
+    if (Object.keys(patch).length === 0) {
+      return NextResponse.json({ thread }, { status: 200 });
+    }
+    const updated = await threadApi.update(id, patch);
+    return NextResponse.json({ thread: updated ?? thread });
+  } catch (e) {
+    console.error(e);
+    return NextResponse.json(
+      { error: e instanceof Error ? e.message : "Internal error" },
+      { status: 500 }
+    );
+  }
+}

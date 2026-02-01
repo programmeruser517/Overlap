@@ -99,7 +99,7 @@ export default function SettingsPage() {
               <Image src="/overlap_blue.png" alt="Overlap" width={88} height={88} priority />
             </div>
             <div className="brandText">
-              <span className="brandTitle">Workthreads</span>
+              <span className="brandTitle">Settings</span>
               <span className="brandSub">AI-to-AI coordination in all your workflows.</span>
             </div>
           </Link>

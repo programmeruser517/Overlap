@@ -42,18 +42,25 @@ export async function getCurrentUserId(): Promise<string | null> {
 }
 
 export const threadApi = {
-  async create(kind: "schedule" | "email", prompt: string, participants: { userId: string }[]) {
+  async create(kind: "schedule" | "email", prompt: string, participants: { userId: string }[], viewMode?: "linear" | "graph") {
     const userId = await getCurrentUserId();
     if (!userId) throw new Error("Unauthorized");
     return createThread(
-      { ownerId: userId, kind, prompt, participants },
+      { ownerId: userId, kind, prompt, participants, viewMode },
       { db, clock }
     );
   },
   async get(id: string) {
     return db.getThread(id);
   },
-  async update(id: string, patch: { prompt?: string; participants?: { userId: string }[]; kind?: "schedule" | "email" }) {
+  async update(id: string, patch: {
+    prompt?: string;
+    participants?: { userId: string }[];
+    kind?: "schedule" | "email";
+    status?: import("@overlap/core").Thread["status"];
+    proposal?: import("@overlap/core").Proposal;
+    viewMode?: "linear" | "graph";
+  }) {
     const now = clock.now();
     return db.updateThread(id, { ...patch, updatedAt: now });
   },

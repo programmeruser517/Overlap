@@ -1,4 +1,4 @@
-import type { Thread, PromptKind, Participant } from "../domain/models";
+import type { Thread, PromptKind, Participant, ThreadViewMode } from "../domain/models";
 import type { DbPort, ClockPort } from "../ports/index";
 
 export interface CreateThreadInput {
@@ -6,6 +6,8 @@ export interface CreateThreadInput {
   kind: PromptKind;
   prompt: string;
   participants: Participant[];
+  /** UI view mode when created (linear | graph); stored so thread opens in same view. */
+  viewMode?: ThreadViewMode;
 }
 
 export interface CreateThreadDeps {
@@ -24,6 +26,7 @@ export async function createThread(
     status: "draft",
     prompt: input.prompt,
     participants: input.participants,
+    viewMode: input.viewMode,
     createdAt: now,
     updatedAt: now,
   });
