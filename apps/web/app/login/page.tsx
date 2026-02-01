@@ -64,7 +64,7 @@ export default function LoginPage() {
       <main className="loginWrap">
         <header className="topbar">
           <div className="container topbarInner">
-            <Link href="/" className="brand">
+            <a href="/" className="brand" style={{ textDecoration: "none", color: "inherit" }}>
               <div className="logoWrap" aria-hidden="true">
                 <Image
                   src="/overlap_blue.png"
@@ -78,7 +78,7 @@ export default function LoginPage() {
                 <span className="brandHeader">Login</span>
                 <span className="brandSub">AI-to-AI coordination in all your workflows.</span>
               </div>
-            </Link>
+            </a>
             <nav className="nav">
               <Link className="navLink" href="/#how">
                 How it works
