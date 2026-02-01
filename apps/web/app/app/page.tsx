@@ -28,14 +28,14 @@ export default function AppHome() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
+  const refetchRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     const v = searchParams.get("view");
     if (v === "linear" || v === "graph") setViewMode(v);
   }, [searchParams]);
 
-  useEffect(() => {
-    if (pathname !== "/app") return;
+  const refetchOnboardingAndThreads = () => {
     setGetToMain(null);
     router.refresh();
     fetch("/api/onboarding", { cache: "no-store", credentials: "include" })
@@ -45,9 +45,58 @@ export default function AppHome() {
         if (d.onboarding_data && typeof d.onboarding_data === "object") {
           setFormData((prev) => ({ ...prev, ...d.onboarding_data }));
         }
+        if (d.get_to_main === true) {
+          fetch("/api/thread", { credentials: "include", cache: "no-store" })
+            .then((r) => r.json())
+            .then((tRes) => {
+              const list = Array.isArray(tRes?.threads) ? tRes.threads : [];
+              setThreads(list.map((t: { id: string; viewMode?: string; [k: string]: unknown }) => ({
+                ...t,
+                viewMode: t.viewMode === "linear" || t.viewMode === "graph" ? t.viewMode : undefined,
+              })));
+            })
+            .catch(() => setThreads([]));
+        }
       })
       .catch(() => setGetToMain(false));
+  };
+
+  refetchRef.current = refetchOnboardingAndThreads;
+
+  useEffect(() => {
+    if (pathname !== "/app") return;
+    refetchOnboardingAndThreads();
   }, [pathname, router]);
+
+  useEffect(() => {
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (!e.persisted) return;
+      if (typeof window !== "undefined" && window.location.pathname === "/app") {
+        refetchRef.current();
+      }
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, []);
+
+  useEffect(() => {
+    if (pathname !== "/app") return;
+    const onVisible = () => {
+      if (document.visibilityState === "visible") refetchRef.current();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (pathname !== "/app" || typeof window === "undefined") return;
+    if (!sessionStorage.getItem("app-force-refresh-done")) {
+      sessionStorage.setItem("app-force-refresh-done", "1");
+      window.location.reload();
+      return;
+    }
+    sessionStorage.removeItem("app-force-refresh-done");
+  }, [pathname]);
 
   useEffect(() => {
     if (getToMain === false) {
@@ -179,8 +228,8 @@ export default function AppHome() {
       });
       const data = await res.json().catch(() => ({}));
       if (data?.thread?.id) {
-        setThreads((prev) => [data.thread, ...prev]);
-        router.push(`/app/thread/${data.thread.id}`);
+        setThreads((prev) => [{ ...data.thread, viewMode }, ...prev]);
+        router.push(`/app/thread/${data.thread.id}?view=${viewMode}`);
       } else {
         setCreatingThread(false);
       }

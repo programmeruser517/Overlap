@@ -1,11 +1,12 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useLayoutEffect, useState, useRef, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { createBrowserClient } from "@supabase/ssr";
 import LoadingScreen from "@/components/LoadingScreen";
+import { LinearThreadView } from "./LinearThreadView";
 
 type ChatToken =
   | { type: "text"; value: string }
@@ -29,6 +30,8 @@ const ACTIONS_STUB = [
 export default function ThreadPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const view = (searchParams.get("view") === "linear" || searchParams.get("view") === "graph") ? searchParams.get("view") : "graph";
   const id = params.id as string;
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -856,6 +859,10 @@ export default function ThreadPage() {
     }
     router.push("/login");
   };
+
+  if (view === "linear") {
+    return <LinearThreadView />;
+  }
 
   if (loading) {
     return <LoadingScreen message="Loading thread…" />;

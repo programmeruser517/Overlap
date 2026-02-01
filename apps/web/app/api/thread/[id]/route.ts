@@ -112,7 +112,10 @@ export async function PATCH(
       }
       patch.status = body.status as typeof thread.status;
     }
-    if (body.proposal !== undefined) patch.proposal = body.proposal ?? undefined;
+    if (body.proposal !== undefined) {
+      const summary = typeof body.proposal.summary === "string" ? body.proposal.summary : "";
+      patch.proposal = { ...body.proposal, summary };
+    }
     if (body.viewMode === "linear" || body.viewMode === "graph") patch.viewMode = body.viewMode;
 
     if (Object.keys(patch).length === 0) {
