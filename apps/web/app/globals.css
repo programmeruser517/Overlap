@@ -67,3 +67,38 @@ a:hover {
   background: var(--bg);
   padding: 0;
 }
+
+/* Global loading screen (route transitions) */
+.globalLoader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f7f8fb;
+  background-image: linear-gradient(180deg, #fff 0%, #f0f2f8 100%);
+}
+.globalLoaderInner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+.globalLoaderLogo {
+  display: block;
+  flex-shrink: 0;
+}
+.globalLoaderSpinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid rgba(15, 23, 42, 0.1);
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: globalLoaderSpin 0.7s linear infinite;
+}
+@keyframes globalLoaderSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}

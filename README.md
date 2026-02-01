@@ -2,7 +2,7 @@
 
 **Version:** 0.1.0
 
-AI-to-AI coordination: schedule meetings or draft emails without back-and-forth. Each user runs an agent that securely understands their availability and preferences; agents negotiate overlaps across calendars (1-to-1 or groups) and present a clear preview before taking action. Say what you want, see what Overlap plans to do, approve it—no inbox ping-pong, no manual scheduling.
+AI-to-AI coordination in all your workflows: schedule meetings or draft emails without back-and-forth. Each user runs an agent that securely understands their availability and preferences; agents negotiate overlaps across calendars (1-to-1 or groups) and present a clear preview before taking action. Say what you want, see what Overlap plans to do, approve it—no inbox ping-pong, no manual scheduling.
 
 ---
 

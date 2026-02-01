@@ -23,8 +23,8 @@
   "bundle": {
     "active": true,
     "targets": "all",
-    "longDescription": "Overlap — AI-to-AI coordination. Schedule meetings or draft emails without back-and-forth.",
-    "shortDescription": "AI-to-AI coordination for scheduling and email",
+    "longDescription": "Overlap — AI-to-AI coordination in all your workflows. Schedule meetings or draft emails without back-and-forth.",
+    "shortDescription": "AI-to-AI coordination in all your workflows",
     "category": "Productivity"
   }
 }

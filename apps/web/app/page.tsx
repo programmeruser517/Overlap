@@ -21,7 +21,7 @@ export default function HomePage() {
               </div>
               <div className="brandText">
                 <span className="brandSub">
-                  AI-to-AI coordination for scheduling.
+                  AI-to-AI coordination in all your workflows.
                 </span>
               </div>
             </div>

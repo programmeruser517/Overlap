@@ -5,7 +5,7 @@ import { setSessionCookie } from "@/lib/auth/session";
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const token = searchParams.get("token");
-  const next = searchParams.get("next") ?? "/app";
+  const next = searchParams.get("next") ?? "/onboarding";
   const origin = request.nextUrl.origin;
 
   if (!token) {

@@ -1,15 +1,14 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
 
-export default function AppHome() {
+export default function OnboardingPage() {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
-  const [getToMain, setGetToMain] = useState<boolean | null>(null);
+  const [showFinal, setShowFinal] = useState(false);
   const [saving, setSaving] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
   const [formData, setFormData] = useState({
@@ -27,19 +26,15 @@ export default function AppHome() {
     fetch("/api/onboarding")
       .then((r) => r.json())
       .then((d) => {
-        setGetToMain(d.get_to_main === true);
         if (d.onboarding_data && typeof d.onboarding_data === "object") {
           setFormData((prev) => ({ ...prev, ...d.onboarding_data }));
         }
+        if (d.get_to_main === false && d.onboarding_data && typeof d.onboarding_data === "object" && (d.onboarding_data as { name?: string }).name) {
+          router.replace("/onboarding/organization");
+        }
       })
-      .catch(() => setGetToMain(false));
-  }, []);
-
-  useEffect(() => {
-    if (getToMain === false) {
-      router.replace("/onboarding");
-    }
-  }, [getToMain, router]);
+      .catch(() => {});
+  }, [router]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -56,15 +51,6 @@ export default function AppHome() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [open]);
-
-  const userInitials = useMemo(() => {
-    const name = (formData?.name ?? "").trim();
-    if (!name) return "";
-    const parts = name.split(/\s+/).filter(Boolean);
-    const first = parts[0]?.[0] ?? "";
-    const last = parts[1]?.[0] ?? "";
-    return (first + last).toUpperCase().slice(0, 2);
-  }, [formData?.name]);
 
   const handleLogout = async () => {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -102,8 +88,8 @@ export default function AppHome() {
       if (!res.ok) {
         return;
       }
-      if (data.get_to_main) {
-        setGetToMain(true);
+      if (data.ok) {
+        router.push("/onboarding/organization");
       }
     } finally {
       setSaving(false);
@@ -222,16 +208,12 @@ export default function AppHome() {
     }
   ];
 
-  if (getToMain !== true) {
-    return (
-      <main className="wrap appMain" style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <p style={{ color: "var(--muted)" }}>Loading…</p>
-      </main>
-    );
-  }
+  const currentQuestion = questions[step];
+  const isLastStep = step === questions.length;
 
-  return (
-      <main className="wrap appMain">
+  if (showFinal) {
+    return (
+      <main className="onboardingWrap onboardingFinal">
         <header className="topbar">
           <div className="container topbarInner">
             <div className="brand">
@@ -244,34 +226,14 @@ export default function AppHome() {
             </div>
             <div className="profileWrap" ref={profileRef}>
               <button className="avatar" onClick={() => setOpen(!open)} aria-label="Profile menu">
-                {userInitials ? (
-                  <span className="avatarInitials">{userInitials}</span>
-                ) : (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="12" cy="7" r="4"></circle>
-                  </svg>
-                )}
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
               </button>
               {open && (
                 <div className="profileMenu">
-                  <Link href="/app/settings" className="profileMenuItem profileMenuItemLink" onClick={() => setOpen(false)}>
-                    <span className="profileMenuIcon" aria-hidden>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-                      </svg>
-                    </span>
-                    Settings
-                  </Link>
-                  <div className="profileMenuDivider" />
-                  <button type="button" onClick={handleLogout} className="profileMenuItem profileMenuItemLogout">
-                    <span className="profileMenuIcon" aria-hidden>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
-                      </svg>
-                    </span>
-                    Log out
-                  </button>
+                  <button onClick={handleLogout} className="profileItem">Log out</button>
                 </div>
               )}
             </div>
@@ -281,31 +243,244 @@ export default function AppHome() {
           <div className="container heroGrid single">
             <div className="centerStack">
               <h1 className="h1 small">You&apos;re all set.</h1>
-              <p className="sub center">Create a thread to get started.</p>
-              <a className="btn btnPrimary btnLarge btnPulse" href="/app">
-                New thread
-              </a>
+              <p className="sub center">Your preferences are saved. Go to the app to get started.</p>
+              <button
+                type="button"
+                className="btn btnPrimary btnLarge"
+                onClick={() => router.push("/app")}
+              >
+                Go to app <span className="arrow">→</span>
+              </button>
             </div>
-          </div>
-        </section>
-        <section className="container threadsSection">
-          <h2 className="threadsTitle">Previous threads</h2>
-          <div className="threadsTableWrap">
-            <table className="threadsTable">
-              <thead>
-                <tr>
-                  <th>Title</th>
-                  <th>Created</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody />
-            </table>
           </div>
         </section>
         <style>{css}</style>
       </main>
     );
+  }
+
+  return (
+    <main className="onboardingWrap">
+      {/* Top bar */}
+      <header className="topbar">
+        <div className="container topbarInner">
+          <div className="brand">
+            <div className="logoWrap">
+              <Image
+                src="/overlap_blue.png"
+                alt="Overlap"
+                width={88}
+                height={88}
+                priority
+              />
+            </div>
+             <div className="brandText">
+                <span className="brandSub">AI-to-AI coordination in all your workflows.</span>
+              </div>
+          </div>
+
+          <div className="profileWrap" ref={profileRef}>
+            <button
+              className="avatar"
+              onClick={() => setOpen(!open)}
+              aria-label="Profile menu"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </button>
+
+            {open && (
+              <div className="profileMenu">
+                <button onClick={handleLogout} className="profileItem">
+                  Log out
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* Content */}
+      <section className="hero">
+        <div className="container heroGrid single">
+          <div className="centerStack">
+            {/* Rotating logo */}
+            <div className="orbit">
+              <div className="orbitRing" />
+              <div className="orbitRing2" />
+              <div className="orbitLogo">
+                <Image
+                  src="/overlap_blue_no_text.png"
+                  alt=""
+                  width={64}
+                  height={64}
+                />
+              </div>
+            </div>
+
+       
+
+            <h1 className="h1 small">
+              Tell your agent how you work.
+            </h1>
+            <p className="sub center">
+              Give your agent context to coordinate on your behalf. Your information stays private.
+            </p>
+
+            {/* Progress dots */}
+            <div className="progress">
+              {questions.map((_, i) => (
+                <div key={i} className={`dot ${i <= step ? "active" : ""} ${i === step ? "current" : ""}`} />
+              ))}
+            </div>
+
+            {/* Card */}
+            <div className="card wide">
+              {!isLastStep ? (
+                <>
+                  <div className="questionHeader">
+                    <div className="stepLabel">Step {step + 1} of {questions.length}</div>
+                    <div className="questionTitle">{currentQuestion.label}</div>
+                    {currentQuestion.hint && (
+                      <div className="questionHint">{currentQuestion.hint}</div>
+                    )}
+                  </div>
+
+                  <div className="questionField">
+                    {currentQuestion.type === "text" ? (
+                      <input
+                        type="text"
+                        className="questionInput"
+                        placeholder={currentQuestion.placeholder}
+                        value={formData[currentQuestion.field as keyof typeof formData]}
+                        onChange={(e) => setFormData({...formData, [currentQuestion.field]: e.target.value})}
+                        autoFocus
+                      />
+                    ) : currentQuestion.type === "timerange" ? (
+                      <div className="timeRange">
+                        <div className="timeRangeItem">
+                          <label className="timeRangeLabel">Start</label>
+                          <select
+                            className="questionSelect"
+                            value={formData.hoursStart}
+                            onChange={(e) => setFormData({...formData, hoursStart: e.target.value})}
+                            autoFocus
+                          >
+                            {timeSlots.map((slot) => (
+                              <option key={slot.value} value={slot.value}>{slot.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="timeRangeSep">→</div>
+                        <div className="timeRangeItem">
+                          <label className="timeRangeLabel">End</label>
+                          <select
+                            className="questionSelect"
+                            value={formData.hoursEnd}
+                            onChange={(e) => setFormData({...formData, hoursEnd: e.target.value})}
+                          >
+                            {timeSlots.map((slot) => (
+                              <option key={slot.value} value={slot.value}>{slot.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    ) : (
+                      <select
+                        className="questionSelect"
+                        value={formData[currentQuestion.field as keyof typeof formData]}
+                        onChange={(e) => setFormData({...formData, [currentQuestion.field]: e.target.value})}
+                        autoFocus
+                      >
+                        {currentQuestion.options?.map((opt) => (
+                          <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+
+                  <div className="wizardActions">
+                    {step > 0 && (
+                      <button className="btn btnGhost" onClick={handleBack}>
+                        ← Back
+                      </button>
+                    )}
+                    <button 
+                      className="btn btnPrimary btnLarge" 
+                      onClick={handleNext}
+                      disabled={step === 0 && !formData.name.trim()}
+                    >
+                      Continue <span className="arrow">→</span>
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="reviewHeader">
+                    <div className="reviewIcon">✓</div>
+                    <div className="reviewTitle">Review your information</div>
+                    <div className="reviewSub">Confirm everything looks good before saving</div>
+                  </div>
+
+                  <div className="reviewGrid">
+                    <div className="reviewItem">
+                      <div className="reviewLabel">Name</div>
+                      <div className="reviewValue">{formData.name || "Not set"}</div>
+                    </div>
+                    <div className="reviewItem">
+                      <div className="reviewLabel">Working hours</div>
+                      <div className="reviewValue">
+                        {timeSlots.find(t => t.value === formData.hoursStart)?.label} – {timeSlots.find(t => t.value === formData.hoursEnd)?.label}
+                      </div>
+                    </div>
+                    <div className="reviewItem">
+                      <div className="reviewLabel">Time zone</div>
+                      <div className="reviewValue">{formData.timezone}</div>
+                    </div>
+                    <div className="reviewItem">
+                      <div className="reviewLabel">Meeting location</div>
+                      <div className="reviewValue">{formData.location}</div>
+                    </div>
+                    <div className="reviewItem">
+                      <div className="reviewLabel">Preferred time</div>
+                      <div className="reviewValue">{formData.time}</div>
+                    </div>
+                    <div className="reviewItem">
+                      <div className="reviewLabel">Buffer time</div>
+                      <div className="reviewValue">{formData.buffer}</div>
+                    </div>
+                  </div>
+
+                  <div className="actionRow">
+                    <button
+                      className="btn btnPrimary btnLarge full"
+                      onClick={handleSavePreferences}
+                      disabled={saving}
+                    >
+                      {saving ? "Saving…" : "Save preferences"} <span className="arrow">→</span>
+                    </button>
+                    <div className="actionRowSplit">
+                      <button className="btn btnGhost" onClick={handleBack}>
+                        ← Back
+                      </button>
+                      <button className="btn btnGhost" onClick={handleReset}>
+                        Reset to defaults
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <style>{css}</style>
+    </main>
+  );
 }
 
 const css = `
@@ -329,67 +504,63 @@ html,body{height:100%}
 body{
   margin:0;
   color:var(--text);
-  background:
-    radial-gradient(1200px 500px at 15% 0%, rgba(37,99,235,.10), transparent 60%),
-    radial-gradient(1000px 520px at 90% 10%, rgba(124,58,237,.10), transparent 55%),
-    linear-gradient(180deg, #ffffff, var(--bg));
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
   -webkit-font-smoothing:antialiased;
   -moz-osx-font-smoothing:grayscale;
 }
 a{color:inherit;text-decoration:none}
 
-.wrap{min-height:100vh}
-/* /app unique background: no grid, no dots – gradient + soft bands + orbs */
-.appMain{
-  position:relative;
+.onboardingWrap{
   min-height:100vh;
-  background:#eef0f7;
+  background:#faf8fc;
   background-image:
-    linear-gradient(160deg, #f4f5fa 0%, #eef0f7 35%, #e6e9f4 100%);
+    radial-gradient(ellipse 100% 100% at 80% 20%, rgba(196,181,253,.35), transparent 55%),
+    radial-gradient(ellipse 90% 80% at 15% 70%, rgba(167,139,250,.22), transparent 50%),
+    radial-gradient(ellipse 70% 60% at 50% 40%, rgba(253,224,71,.08), transparent 45%),
+    radial-gradient(ellipse 120% 100% at -10% 50%, rgba(129,140,248,.18), transparent 50%),
+    linear-gradient(165deg, #f5f3ff 0%, #faf8fc 40%, #fefce8 100%);
+  position:relative;
 }
-.appMain::before{
+.onboardingWrap::before{
   content:"";
   position:fixed;inset:0;z-index:0;pointer-events:none;
   background-image:
-    linear-gradient(120deg, rgba(37,99,235,.06) 0%, transparent 40%),
-    linear-gradient(240deg, rgba(124,58,237,.05) 0%, transparent 45%),
-    linear-gradient(60deg, transparent 50%, rgba(37,99,235,.04) 100%);
-  background-size: 100% 100%;
+    radial-gradient(circle, rgba(167,139,250,.14) 1.5px, transparent 1.5px),
+    radial-gradient(circle, rgba(129,140,248,.08) 1px, transparent 1px);
+  background-size: 32px 32px, 18px 18px;
+  background-position: 0 0, 9px 9px;
 }
-.appMain::after{
+.onboardingWrap::after{
   content:"";
   position:fixed;inset:0;z-index:0;pointer-events:none;
   background-image:
-    radial-gradient(ellipse 90% 60% at 10% 15%, rgba(37,99,235,.12) 0%, transparent 50%),
-    radial-gradient(ellipse 80% 70% at 95% 85%, rgba(124,58,237,.1) 0%, transparent 50%),
-    radial-gradient(ellipse 70% 50% at 50% 50%, rgba(37,99,235,.05) 0%, transparent 55%);
+    radial-gradient(circle at 10% 15%, rgba(196,181,253,.2) 0%, transparent 25%),
+    radial-gradient(circle at 88% 80%, rgba(167,139,250,.18) 0%, transparent 28%),
+    radial-gradient(circle at 70% 25%, rgba(253,224,71,.12) 0%, transparent 22%),
+    radial-gradient(circle at 25% 85%, rgba(129,140,248,.15) 0%, transparent 30%),
+    radial-gradient(circle at 95% 45%, rgba(196,181,253,.12) 0%, transparent 20%),
+    radial-gradient(circle at 50% 95%, rgba(167,139,250,.1) 0%, transparent 35%);
   background-size: 100% 100%;
 }
-.appMain > *{position:relative;z-index:1}
-.container{max-width:1100px;margin:0 auto;padding:0 20px}
+.onboardingWrap > *{position:relative;z-index:1}
 
-.threadsSection{margin-top:48px;padding-bottom:48px}
-.threadsTitle{margin:0 0 16px;font-size:18px;font-weight:700;color:var(--text)}
-.threadsTableWrap{
-  background:rgba(255,255,255,.82);
-  border:1px solid var(--border);
-  border-radius:12px;
-  overflow:hidden;
-  box-shadow:0 1px 3px rgba(15,23,42,.06);
+/* You're all set: different pattern only (diagonal lines + soft rings) */
+.onboardingWrap.onboardingFinal::before{
+  background-image:
+    linear-gradient(105deg, rgba(167,139,250,.06) 0%, transparent 50%),
+    linear-gradient(75deg, transparent 0%, rgba(129,140,248,.05) 50%);
+  background-size: 60px 100%, 100px 80px;
+  background-position: 0 0, 0 0;
 }
-.threadsTable{width:100%;border-collapse:collapse;font-size:14px}
-.threadsTable th{
-  text-align:left;
-  padding:12px 16px;
-  font-weight:600;
-  color:var(--muted);
-  background:rgba(15,23,42,.03);
-  border-bottom:1px solid var(--border);
+.onboardingWrap.onboardingFinal::after{
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% 50%, rgba(255,255,255,.25) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 40% at 20% 80%, rgba(196,181,253,.08) 0%, transparent 45%),
+    radial-gradient(ellipse 50% 60% at 85% 20%, rgba(167,139,250,.06) 0%, transparent 45%);
+  background-size: 100% 100%;
 }
-.threadsTable th:last-child{text-align:right}
-.threadsTable td{padding:12px 16px;border-bottom:1px solid var(--border);color:var(--text)}
-.threadsTable tbody tr:last-child td{border-bottom:none}
+
+.container{max-width:1100px;margin:0 auto;padding:0 20px}
 
 .topbar{
   position:sticky;top:0;z-index:50;
@@ -434,83 +605,55 @@ a{color:inherit;text-decoration:none}
   transform:translateY(-1px);
   box-shadow:0 6px 16px rgba(37,99,235,.25);
 }
-.avatar{display:grid;place-items:center}
-.avatarInitials{font-size:15px;letter-spacing:-.02em;line-height:1}
 .profileMenu{
   position:absolute;
-  right:0;
-  top:calc(100% + 10px);
-  min-width:200px;
-  background:rgba(255,255,255,.98);
-  backdrop-filter:blur(12px);
-  -webkit-backdrop-filter:blur(12px);
+  right:-20px;
+  top:46px;
+  background:#fff;
   border:1px solid var(--border);
-  border-radius:16px;
-  box-shadow:0 10px 40px rgba(15,23,42,.12), 0 4px 12px rgba(15,23,42,.06);
+  border-radius:14px;
+  box-shadow:var(--shadow2);
   overflow:hidden;
-  animation:profileMenuIn .2s ease;
+  min-width:120px;
+  animation:slideDown .2s ease;
 }
-@keyframes profileMenuIn{
-  from{opacity:0;transform:translateY(-6px);}
-  to{opacity:1;transform:translateY(0);}
+@keyframes slideDown{
+  from{opacity:0;transform:translateY(-8px)}
+  to{opacity:1;transform:translateY(0)}
 }
-.profileMenuItem{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  width:100%;
-  padding:12px 16px;
-  font-size:14px;
-  font-weight:600;
-  font-family:inherit;
-  border:none;
-  background:none;
-  cursor:pointer;
-  text-decoration:none;
-  color:var(--text);
-  transition:background .15s ease, color .15s ease;
-  text-align:left;
-  box-sizing:border-box;
-}
-.profileMenuIcon{
-  flex-shrink:0;
-  width:36px;
-  height:36px;
-  border-radius:10px;
-  display:grid;
-  place-items:center;
-  color:var(--muted);
-  transition:color .15s ease, background .15s ease;
-}
-.profileMenuItemLink{
-  color:var(--text);
-}
-.profileMenuItemLink:hover{
+.profileHeader{
+  padding:14px 14px;
+  display:flex;gap:12px;align-items:center;
   background:rgba(37,99,235,.06);
-  color:var(--text);
 }
-.profileMenuItemLink:hover .profileMenuIcon{
-  color:var(--accent);
-  background:rgba(37,99,235,.08);
+.profileAvatar{
+  width:40px;height:40px;
+  border-radius:10px;
+  background:linear-gradient(135deg, var(--accent), var(--accent2));
+  display:grid;place-items:center;
+  color:#fff;
+  font-weight:800;
+  font-size:14px;
+  border:1px solid rgba(37,99,235,.25);
 }
-.profileMenuDivider{
-  height:1px;
-  background:var(--border);
-  margin:0 12px;
+.profileName{font-weight:700;font-size:14px;color:var(--text)}
+.profileEmail{font-size:12px;color:var(--muted);margin-top:2px}
+.profileDivider{height:1px;background:var(--border)}
+.profileItem{
+  display:block;
+  padding:11px 14px;
+  font-size:14px;
+  color:#ef4444;
+  text-align:center;
+  transition:background .15s ease;
+  width:100%;
+  background:none;
+  border:none;
+  cursor:pointer;
+  font-family:inherit;
 }
-.profileMenuItemLogout{
-  color:#dc2626;
-}
-.profileMenuItemLogout .profileMenuIcon{
-  color:#dc2626;
-}
-.profileMenuItemLogout:hover{
-  background:rgba(220,38,38,.08);
-  color:#b91c1c;
-}
-.profileMenuItemLogout:hover .profileMenuIcon{
-  color:#b91c1c;
-  background:rgba(220,38,38,.12);
+.profileItem:hover{
+  background:rgba(239,68,68,.08);
 }
 
 .hero{padding:56px 0 80px}
@@ -888,14 +1031,6 @@ a{color:inherit;text-decoration:none}
   background:rgba(15,23,42,.05);
 }
 .btnLarge{padding:12px 16px;border-radius:14px}
-@keyframes btnPulse {
-  0%, 100%{ box-shadow: 0 2px 12px rgba(37,99,235,.2), 0 1px 0 rgba(15,23,42,.04); }
-  50%{ box-shadow: 0 8px 32px rgba(37,99,235,.4), 0 0 0 8px rgba(37,99,235,.12), 0 1px 0 rgba(15,23,42,.04); }
-}
-.btnPulse{
-  animation: btnPulse 3.5s ease-in-out infinite;
-}
-.btnPulse:hover{ animation: none; }
 .arrow{opacity:.9}
 
 .actionRow{

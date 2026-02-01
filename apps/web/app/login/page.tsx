@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { signInWithPassword, signUpWithPassword } from "@/lib/supabase/client";
+import { signInWithPassword } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const [intent, setIntent] = useState<"signin" | "signup">("signin");
@@ -18,43 +18,32 @@ export default function LoginPage() {
     setMessage(null);
     setLoading(true);
     try {
-      if (mode === "password") {
+      if (intent === "signin" && mode === "password") {
         if (!password.trim()) {
-          setMessage({ type: "err", text: intent === "signup" ? "Choose a password." : "Enter your password." });
+          setMessage({ type: "err", text: "Enter your password." });
           setLoading(false);
           return;
         }
-        if (intent === "signup") {
-          const { error } = await signUpWithPassword(email.trim(), password);
-          if (error) {
-            setMessage({ type: "err", text: error.message });
-            setLoading(false);
-            return;
-          }
-          setMessage({ type: "ok", text: "Check your email to confirm your account." });
-        } else {
-          const { error } = await signInWithPassword(email.trim(), password);
-          if (error) {
-            setMessage({ type: "err", text: error.message });
-            setLoading(false);
-            return;
-          }
-          window.location.href = "/app";
+        const { error } = await signInWithPassword(email.trim(), password);
+        if (error) {
+          setMessage({ type: "err", text: error.message });
+          setLoading(false);
           return;
         }
-      } else {
-        const res = await fetch("/api/auth/magic-link", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: email.trim() }),
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          setMessage({ type: "err", text: data.error ?? "Something went wrong." });
-          return;
-        }
-        setMessage({ type: "ok", text: data.message ?? "Check your email for the sign-in link." });
+        window.location.href = "/onboarding";
+        return;
       }
+      const res = await fetch("/api/auth/magic-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setMessage({ type: "err", text: data.error ?? "Something went wrong." });
+        return;
+      }
+      setMessage({ type: "ok", text: data.message ?? "Check your email for the sign-in link." });
     } catch (err) {
       setMessage({ type: "err", text: err instanceof Error ? err.message : "Something went wrong." });
     } finally {
@@ -78,7 +67,7 @@ export default function LoginPage() {
                 />
               </div>
               <div className="brandText">
-                <span className="brandSub">AI-to-AI coordination</span>
+                <span className="brandSub">AI-to-AI coordination in all your workflows.</span>
               </div>
             </Link>
             <nav className="nav">
@@ -100,7 +89,9 @@ export default function LoginPage() {
                   <p className="loginSub">
                     {intent === "signup"
                       ? "Enter your email and we’ll send you a magic link to create your account."
-                      : "Enter your email and we’ll send you a magic link to sign in."}
+                      : mode === "password"
+                        ? "Sign in with your email and password."
+                        : "Enter your email and we’ll send you a magic link to sign in."}
                   </p>
                 </div>
                 <form onSubmit={handleSubmit} className="loginForm">
@@ -116,7 +107,7 @@ export default function LoginPage() {
                       autoComplete="email"
                     />
                   </label>
-                  {mode === "password" && (
+                  {intent === "signin" && mode === "password" && (
                     <label className="loginLabel">
                       Password
                       <input
@@ -124,9 +115,8 @@ export default function LoginPage() {
                         className="loginInput"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        placeholder={intent === "signup" ? "At least 8 characters" : "••••••••"}
-                        minLength={intent === "signup" ? 8 : undefined}
-                        autoComplete={intent === "signup" ? "new-password" : "current-password"}
+                        placeholder="••••••••"
+                        autoComplete="current-password"
                       />
                     </label>
                   )}
@@ -137,27 +127,23 @@ export default function LoginPage() {
                   )}
                   <div className="loginActions">
                     <button type="submit" className="btn btnPrimary btnLarge" disabled={loading}>
-                      {loading
-                        ? "…"
-                        : mode === "magic"
-                          ? "Send magic link"
-                          : intent === "signup"
-                            ? "Create account"
-                            : "Sign in"}
+                      {loading ? "…" : intent === "signin" && mode === "password" ? "Sign in" : "Send magic link"}
                     </button>
-                    <p className="loginSwitch">
-                      <button
-                        type="button"
-                        className="loginPasswordToggle"
-                        onClick={() => {
-                          setMode(mode === "magic" ? "password" : "magic");
-                          setMessage(null);
-                          setPassword("");
-                        }}
-                      >
-                        {mode === "magic" ? "Sign in with password" : "Use magic link instead"}
-                      </button>
-                    </p>
+                    {intent === "signin" && (
+                      <p className="loginSwitch">
+                        <button
+                          type="button"
+                          className="loginPasswordToggle"
+                          onClick={() => {
+                            setMode(mode === "magic" ? "password" : "magic");
+                            setMessage(null);
+                            setPassword("");
+                          }}
+                        >
+                          {mode === "magic" ? "Sign in with password" : "Use magic link instead"}
+                        </button>
+                      </p>
+                    )}
                     <p className="loginSwitch">
                       {intent === "signup" ? (
                         <>Already have an account?{" "}
@@ -179,7 +165,9 @@ export default function LoginPage() {
                             className="btn btnGhost btnSmall"
                             onClick={() => {
                               setIntent("signup");
+                              setMode("magic");
                               setMessage(null);
+                              setPassword("");
                             }}
                           >
                             Sign up
